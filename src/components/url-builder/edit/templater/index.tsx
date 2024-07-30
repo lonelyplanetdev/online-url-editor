@@ -7,14 +7,9 @@ import { URLBuilderEditorTemplaterSelectTemplate as SelectTemplate } from './sel
 import { URLBuilderEditorTemplaterURLBox as URLBox } from './url-box';
 import { URLBuilderEditorTemplaterParamsDynamic as ParamsDynamic } from './params/dynamic';
 import { useURLStore } from '~/store/urls';
+import { useEditorStore } from '~/store/editor';
 
 interface URLBuilderEditorTemplaterProps {
-  url: {
-    id: string;
-    url: string;
-    unencodedParams: string[];
-    template?: string;
-  } | null;
   templates:
     | {
         id: string;
@@ -23,117 +18,119 @@ interface URLBuilderEditorTemplaterProps {
     | null;
 }
 export function URLBuilderEditorTemplater({
-  url,
   templates,
 }: URLBuilderEditorTemplaterProps) {
+  const editingId = useEditorStore((state) => state.editing?.id);
+  const editingUrl = useEditorStore((state) => state.editing?.url);
+  const editingParams = useEditorStore((state) => state.params);
+  const allUrls = useURLStore((state) => state.urls);
+
+  const setEditingParams = useEditorStore((state) => state.setParams);
+  const setEditingUrl = useEditorStore((state) => state.setUrl);
+  const setEditingId = useEditorStore((state) => state.setId);
   const updateUrl = useURLStore((state) => state.updateUrl);
   const setSelected = useURLStore((state) => state.setSelected);
+  const setBlank = useEditorStore((state) => state.setBlank);
 
-  const [allTemplates, setAllTemplates] = React.useState<
-    | {
-        id: string;
-        name: string;
-      }[]
-    | null
-  >(templates);
-  const template = React.useRef<string | null>(null);
+  const isCreating = !!editingId;
 
-  const [urlValue, setUrlValue] = React.useState<{
-    id: string;
-    url: string;
-    unencodedParams: string[];
-    template?: string;
-  } | null>(null);
+  const parseParamValue = (value: string, encoded: boolean) => {
+    if (encoded) return encodeURIComponent(value);
+    return decodeURIComponent(value);
+  };
 
-  const editingUrl = React.useRef<{
-    id: string;
-    url: string;
-    unencodedParams: string[];
-    template?: string;
-  } | null>(null);
+  function handleParamChange(
+    params: {
+      key: string;
+      encoded: boolean;
+      value: string;
+    }[],
+  ) {
+    if (isCreating) return null;
 
-  function handleInput(value: string, badInput: boolean) {
-    console.log('domain manually ipdated');
+    setEditingParams(
+      params.map((param) => ({
+        ...param,
+        value: param.value.replace(/[&%=?]/g, ''),
+        key: param.key.replace(/[&%=?]/g, ''),
+      })),
+    );
 
-    if (!value) {
-      setSelected('');
+    const currentUrl = editingUrl;
 
-      return;
-    }
+    const urlUri = currentUrl.split('?')[0];
 
-    if (badInput) return;
+    // check if there are any params in the url
+    const urlParams: string[] = [];
 
-    editingUrl.current = {
-      id: editingUrl.current?.id || '',
-      url: value,
-      unencodedParams: editingUrl.current?.unencodedParams || [],
-      template: editingUrl.current?.template || template.current || '',
-    };
+    params.forEach((param) => {
+      urlParams.push(
+        `${param.key.replace(/[&%=?]/g, '')}=${parseParamValue(param.value.replace(/[&%=?]/g, ''), param.encoded)}`,
+      );
+    });
+
+    const newUrl = `${urlUri}?${urlParams.join('&')}`;
 
     updateUrl(
-      editingUrl.current.id,
-      editingUrl.current.url,
-      editingUrl.current.unencodedParams,
-      editingUrl.current.template,
+      editingId,
+      newUrl,
+      params.filter((param) => !param.encoded).map((param) => param.key),
     );
+    setEditingUrl(newUrl);
   }
 
-  React.useEffect(() => {
-    if (templates) {
-      setAllTemplates(templates);
-    }
-  }, [templates]);
+  function handleUrlChange(url: string) {
+    var currentId = '';
 
-  React.useEffect(() => {
-    if (url) {
-      editingUrl.current = url;
-    } else {
-      editingUrl.current = null;
-    }
+    if (isCreating) {
+      currentId = uuidv4();
+      setEditingId(currentId);
+      setEditingUrl(url);
+      updateUrl(currentId, url, []);
+      setSelected(currentId);
+    } else currentId = editingId;
 
-    setUrlValue(editingUrl.current);
-  }, [url]);
+    setEditingUrl(url);
 
-  function handleParamsChange(
-    params: { param: string; encoded: boolean; value: string }[],
-  ) {
-    if (!editingUrl.current) return;
+    const urlParamsSection = url.split('?')[1];
 
-    const formattedParams = params
-      .map((param) => {
-        if (!param.value.trim()) return null;
-        return param.encoded
-          ? `${param.param}=${encodeURIComponent(param.value)}`
-          : `${param.param}=${param.value}`;
-      })
-      .filter((param) => param !== null);
+    const urlParams = new URLSearchParams(urlParamsSection);
 
-    const theFinishUrl = new URL(editingUrl.current.url);
-    theFinishUrl.search = '';
+    const currentParams = editingParams;
+    const currentUnecondedParams = currentParams.filter(
+      (param) => !param.encoded,
+    );
 
-    const theFinishUrlString =
-      theFinishUrl.toString() + '?' + formattedParams.join('&');
+    const newParams = currentParams.map((param) => {
+      const value = urlParams.get(param.key);
 
-    const unencodedParams = params
-      .filter((param) => !param.encoded)
-      .map((param) => param.param);
+      return {
+        ...param,
+        encoded: !currentUnecondedParams.includes(param),
+        value: value || '',
+      };
+    });
 
-    editingUrl.current.url = theFinishUrlString;
+    const updatedParams = [
+      ...newParams.map((param) => ({
+        ...param,
+        value: param.value.replace(/[&%=?]/g, ''),
+        key: param.key.replace(/[&%=?]/g, ''),
+      })),
+    ];
 
     updateUrl(
-      editingUrl.current.id,
-      editingUrl.current.url,
-      unencodedParams,
-      editingUrl.current.template
-        ? editingUrl.current.template
-        : template.current || '',
+      currentId,
+      url,
+      updatedParams.filter((param) => !param.encoded).map((param) => param.key),
     );
+    setEditingParams(updatedParams);
   }
 
   return (
     <div className="flex h-full w-full flex-col gap-3 lg:flex-row">
       <div className="space-y-6 lg:basis-1/2">
-        {templates !== null && (
+        {/* {templates !== null && (
           <SelectTemplate
             templates={allTemplates}
             onTemplateChange={(id) => {
@@ -141,26 +138,22 @@ export function URLBuilderEditorTemplater({
             }}
             url={urlValue}
           />
-        )}
-        <ParamsDynamic
-          onParamChanged={handleParamsChange}
-          url={url || null}
-        />
+        )} */}
+        <ParamsDynamic onParamsChanged={handleParamChange} />
+        {isCreating ? 'Editing' : 'Creating'} URL
       </div>
       <div className="lg:basis-1/2">
         <URLBox
-          onInput={handleInput}
-          validator={(value) => {
-            if (!value) return null;
-
-            try {
-              new URL(value);
-              return null;
-            } catch (e) {
-              return 'Invalid URL';
+          onInput={(value, badInput) => {
+            if (!value) {
+              setBlank();
+              return;
             }
+
+            if (badInput) return;
+
+            handleUrlChange(value);
           }}
-          defaultValue={urlValue?.url}
         />
       </div>
     </div>

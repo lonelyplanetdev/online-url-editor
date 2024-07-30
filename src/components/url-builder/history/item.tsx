@@ -3,34 +3,57 @@
 import { Trash2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
+import { useEditorStore } from '~/store/editor';
 import { useURLStore } from '~/store/urls';
 
 interface URLBuilderHistoryItemProps {
-  selected?: boolean;
   id: string;
   url: string;
+  unencodedParams: string[];
   timestamp: number;
 }
 export function URLBuilderHistoryItem({
-  selected = false,
   id,
   url,
+  unencodedParams,
   timestamp,
 }: URLBuilderHistoryItemProps) {
-  const { setSelected, removeUrl } = useURLStore();
+  const setSelected = useURLStore((state) => state.setSelected);
+  const removeUrl = useURLStore((state) => state.removeUrl);
+  const loadItem = useEditorStore((state) => state.loadItem);
+  const setParams = useEditorStore((state) => state.setParams);
+  const setBlank = useEditorStore((state) => state.setBlank);
+  const selected = useURLStore((state) => state.selected);
+
+  const isSelected = selected === id;
+
+  function handleSelect() {
+    if (!isSelected) {
+      loadItem({ url, id }, unencodedParams);
+      setSelected(id);
+    } else {
+      setBlank();
+      setSelected(null);
+    }
+  }
+
+  function handleRemove(e: React.MouseEvent) {
+    e.stopPropagation();
+    removeUrl(id);
+  }
 
   return (
     <li
-      onClick={() => (selected ? setSelected('') : setSelected(id))}
+      onClick={handleSelect}
       className={cn(
         'group flex w-64 min-w-64 max-w-64 cursor-pointer select-none flex-row items-center justify-start overflow-hidden p-3 hover:bg-background/50',
         {
-          'bg-primary/15 hover:bg-primary/25': selected,
+          'bg-primary/15 hover:bg-primary/25': isSelected,
         },
       )}
     >
-      <div className="flex h-10 w-64 flex-row items-center justify-between">
-        <div className="w-[calc(256px-24px)] group-hover:w-[calc(256px-76px)]">
+      <div className="flex h-8 w-64 flex-row items-center justify-between">
+        <div className="w-[calc(256px-24px)] group-hover:w-[calc(256px-54px)]">
           <h3
             className="line-clamp-1 shrink overflow-hidden text-ellipsis whitespace-nowrap text-xs"
             title={url}
@@ -45,10 +68,7 @@ export function URLBuilderHistoryItem({
           variant="destructive"
           size="icon"
           className="hidden size-8 shrink group-hover:flex"
-          onClick={(e) => {
-            e.stopPropagation();
-            removeUrl(id);
-          }}
+          onClick={handleRemove}
         >
           <Trash2 size={16} />
         </Button>

@@ -5,17 +5,16 @@ import * as React from 'react';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import { cn } from '~/lib/utils';
+import { useEditorStore } from '~/store/editor';
 
 interface URLBuilderEditorTemplaterURLBox {
-  defaultValue?: string;
-  validator?: (value: string) => string | null;
   onInput?: (value: string, badInput: boolean) => void;
 }
 export function URLBuilderEditorTemplaterURLBox({
-  defaultValue,
-  validator,
   onInput,
 }: URLBuilderEditorTemplaterURLBox) {
+  const defaultValue = useEditorStore((state) => state.editing?.url);
+
   const prevValue = React.useRef<string>(defaultValue || '');
   const [value, setValue] = React.useState<string>(defaultValue || '');
 
@@ -23,8 +22,19 @@ export function URLBuilderEditorTemplaterURLBox({
     null,
   );
 
+  function validator(value: string) {
+    if (!value) return null;
+
+    try {
+      new URL(value);
+      return null;
+    } catch (e) {
+      return 'Invalid URL';
+    }
+  }
+
   function handleInput(event: React.ChangeEvent<HTMLTextAreaElement>) {
-    const error = validator ? validator(event.target.value) : null;
+    const error = validator(event.target.value);
     setValidationError(error);
 
     prevValue.current = event.target.value;

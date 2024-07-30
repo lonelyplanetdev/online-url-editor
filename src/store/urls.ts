@@ -12,7 +12,7 @@ interface URLState {
     template?: string;
   }[];
   selected: string | null;
-  setSelected: (id: string) => void;
+  setSelected: (id: string | null) => void;
   addUrl: (
     id: string,
     url: string,
@@ -37,13 +37,23 @@ export const useURLStore = create<URLState>()(
       selected: null,
       setSelected: (id) =>
         set((state) => ({
-          selected: state.urls.map((url) => url.id).includes(id) ? id : null,
+          selected: id
+            ? state.urls.map((url) => url.id).includes(id)
+              ? id
+              : null
+            : null,
         })),
       addUrl: (id, url, unencodedParams, template) =>
         set((state) => ({
           urls: [
             ...state.urls,
-            { url, id, timestamp: Date.now(), unencodedParams, template },
+            {
+              url,
+              id,
+              timestamp: Date.now(),
+              unencodedParams,
+              template,
+            },
           ],
         })),
       updateUrl: (id, url, unencodedParams, template) =>
@@ -51,7 +61,13 @@ export const useURLStore = create<URLState>()(
           urls: url
             ? [
                 ...state.urls.filter((url) => url.id !== id),
-                { url, id, timestamp: Date.now(), unencodedParams, template },
+                {
+                  url,
+                  id,
+                  timestamp: Date.now(),
+                  unencodedParams,
+                  template,
+                },
               ]
             : state.urls.filter((url) => url.id !== id),
         })),
@@ -61,11 +77,7 @@ export const useURLStore = create<URLState>()(
         })),
       wipeUrls: () =>
         set({
-          urls: [
-            // { url: 'https://www.google.com', id: '1', timestamp: 1632770120000 },
-            // { url: 'https://www.facebook.com', id: '2', timestamp: 1632770120000 },
-            // { url: 'https://www.twitter.com', id: '3', timestamp: 1632770120000 },
-          ],
+          urls: [],
         }),
     }),
     {

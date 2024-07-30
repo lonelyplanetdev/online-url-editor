@@ -8,8 +8,7 @@ import { URLBuilderHistoryItem as HistoryItem } from './item';
 import { URLBuilderHistoryClearButton as HistoryClearButton } from './clear-button';
 
 export function URLBuilderHistory() {
-  const { urls, selected } = useURLStore();
-
+  const urls = useURLStore((state) => state.urls);
   const sorted = urls.sort((a, b) => b.timestamp - a.timestamp);
 
   return (
@@ -30,7 +29,6 @@ export function URLBuilderHistory() {
             <HistoryItem
               {...url}
               key={url.id}
-              selected={url.id === selected}
             />
           ))}
         </ul>
