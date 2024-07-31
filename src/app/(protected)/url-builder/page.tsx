@@ -1,10 +1,4 @@
-import Image from 'next/image';
-import { Button } from '~/components/ui/button';
-import { ScrollArea } from '~/components/ui/scroll-area';
-import { Card, CardFooter, CardHeader } from '~/components/ui/card';
-import { ModeToggle } from '~/components/mode-toggle';
-import { Footer } from '~/components/footer';
-import { URLBuilder } from '~/components/url-builder';
+import { URLBuilder } from '~/components/tools/url-builder';
 
 export default function Home() {
   return (

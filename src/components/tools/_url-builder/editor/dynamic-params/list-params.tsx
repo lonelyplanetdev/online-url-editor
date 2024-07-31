@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Unlock, Minus, Lock } from 'lucide-react';
+import { Shield, Minus, ShieldBan } from 'lucide-react';
 
 import { AddDynamicParam } from './add-param';
 
@@ -14,7 +14,8 @@ import { InputStyle } from '~/components/ui/input';
 import { cn } from '~/lib/utils';
 
 import type { DynamicParam } from '.';
-import { useEditorStore } from '~/store/editor';
+import Link from 'next/link';
+import { useUrlBuilderStore } from '~/components/tools/url-builder/store';
 
 interface ListDynamicParamsProps {
   onRemoveParam?: (param: string) => void;
@@ -28,68 +29,22 @@ export function ListDynamicParams({
   onParamEncodingChanged,
   onParamValueChanged,
 }: ListDynamicParamsProps) {
-  const editingParams = useEditorStore((state) => state.params);
-  const editingUrl = useEditorStore((state) => state.editing?.url);
+  const selected = useUrlBuilderStore((state) => state.selected);
+  const urls = useUrlBuilderStore((state) => state.urls);
 
-  const getParamsFromUrlQuery = (urlQuery: string) => {
-    const urlParams = new URLSearchParams(urlQuery);
-    const urlParamsKeys = Array.from(urlParams.keys());
-
-    return urlParamsKeys.map((key) => ({
-      key,
-      value: urlParams.get(key) ?? '',
-    }));
-  };
-
-  const combineParams = (params: DynamicParam[], urlQuery: string) => {
-    const finalParams = [...params];
-    const urlParams = getParamsFromUrlQuery(urlQuery);
-
-    finalParams.forEach((param) => {
-      const urlParam = urlParams.find((p) => p.key === param.key);
-
-      if (urlParam) {
-        param.value = urlParam.value;
-      }
-    });
-
-    const unincludedUrlParams = urlParams.filter(
-      (p) => !finalParams.find((fp) => fp.key === p.key),
-    );
-
-    return [
-      ...finalParams,
-      ...unincludedUrlParams.map((p) => ({
-        key: p.key,
-        encoded: true,
-        value: p.value,
-      })),
-    ];
-  };
+  const selectedUrl = urls.find((url) => url.id === selected);
 
   const [allParams, setAllParams] = React.useState<DynamicParam[]>([]);
 
   React.useEffect(() => {
-    console.log('editingUrl:', editingUrl);
-    try {
-      const url = new URL(editingUrl);
-      const updatedParams = combineParams(editingParams, url.search);
+    if (!selectedUrl) return setAllParams([]);
 
-      setAllParams(updatedParams);
-    } catch (error) {
-      console.error('Failed to set params from URL:', error);
-    }
-  }, [editingUrl]);
+    const isDynamic = selectedUrl.params?.dynamic ? true : false;
 
-  React.useEffect(() => {
-    setAllParams(editingParams);
-  }, [editingParams]);
+    const params = isDynamic ? selectedUrl.params.dynamic! : [];
 
-  React.useEffect(() => {
-    console.log('setAllParams:', allParams);
-  }, [allParams]);
-
-  if (!editingUrl) return null;
+    setAllParams(params);
+  }, [selectedUrl]);
 
   function handleAddParam(key: string) {
     if (allParams.find((p) => p.key === key)) return;
@@ -156,7 +111,9 @@ export function ListDynamicParams({
 
   return (
     <>
-      <div className="h-full max-h-96">
+      <Label className="mb-1.5 block">Dynamic</Label>
+
+      <div className="h-full max-h-64">
         <ScrollArea className="h-full rounded-lg border bg-background/50 px-2 pb-1 pt-1">
           {!allParams.length && (
             <div className="text-center text-sm text-gray-500">
@@ -168,12 +125,19 @@ export function ListDynamicParams({
               key={kv.key}
               className="my-1 flex flex-row items-center gap-x-1"
             >
-              <Label className={cn('min-w-32 max-w-32', InputStyle)}>
+              <Label
+                className={cn(
+                  'min-w-32 max-w-32',
+                  InputStyle,
+                  'flex h-8 items-center justify-start p-2 font-mono text-xs',
+                )}
+              >
                 {kv.key}
               </Label>
               <Input
                 type="text"
                 placeholder="value"
+                className="h-8 p-2 font-mono text-xs"
                 value={allParams.find((p) => p.key === kv.key)?.value}
                 onChange={(e) =>
                   handleParamValueChanged(kv.key, e.target.value)
@@ -182,33 +146,33 @@ export function ListDynamicParams({
               <Button
                 size="icon"
                 variant="outline"
-                className={cn('h-10 w-10', {
+                className={cn('h-8 w-8', {
                   'hover:bg-emerald-700': kv.encoded,
                   'hover:bg-destructive': !kv.encoded,
                 })}
                 onClick={() => handleEncoded(kv.key, !kv.encoded)}
               >
                 {!kv.encoded ? (
-                  <Unlock
+                  <ShieldBan
                     size={16}
-                    className="w-10"
+                    className="w-8"
                   />
                 ) : (
-                  <Lock
+                  <Shield
                     size={16}
-                    className="w-10"
+                    className="w-8"
                   />
                 )}
               </Button>
               <Button
                 size="icon"
                 variant="outline"
-                className="h-10 w-10 hover:bg-destructive"
+                className="h-8 w-8 hover:bg-destructive"
                 onClick={() => handleRemoveParam(kv.key)}
               >
                 <Minus
                   size={16}
-                  className="w-10"
+                  className="w-8"
                 />
               </Button>
             </div>
@@ -216,6 +180,52 @@ export function ListDynamicParams({
         </ScrollArea>
       </div>
       <AddDynamicParam onAddParam={handleAddParam} />
+      <ul className="ml-6 mt-2 list-outside list-disc text-xs text-muted-foreground">
+        <li>
+          You can either just add the param{' '}
+          <code className="rounded-sm border">key</code> or add the{' '}
+          <code className="rounded-sm border">key=value</code> pair.
+        </li>
+        <li>
+          You can remove the param by clicking the{' '}
+          <code className="inline-block aspect-square rounded-sm border">
+            <Minus
+              size={12}
+              className="block w-3"
+            />
+          </code>{' '}
+          button.
+        </li>
+        <li>
+          You can toggle the encoding of the param by clicking the{' '}
+          <code className="inline-block aspect-square rounded-sm border">
+            <Shield
+              size={12}
+              className="block w-3"
+            />
+          </code>{' '}
+          button. Encoded params mean that the value will be URL encoded
+          <br />
+          <code className="rounded-sm border">
+            &message=price is $0.99
+          </code>{' '}
+          will be encoded to{' '}
+          <code className="rounded-sm border">
+            &message=price%20is%20%240.99
+          </code>
+          .
+        </li>
+        <li>
+          Some charaters <strong>cannot</strong> be left unencoded as they are
+          required as{' '}
+          <Link
+            href="https://www.rfc-editor.org/rfc/rfc3986"
+            className="text-primary underline"
+          >
+            deliminators
+          </Link>
+        </li>
+      </ul>
     </>
   );
 }

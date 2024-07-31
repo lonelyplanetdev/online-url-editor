@@ -27,6 +27,11 @@ export function AddDynamicParam({ onAddParam }: AddDynamicParamProps) {
         type="text"
         placeholder="param"
         value={addingParam || ''}
+        onKeyUp={(e) => {
+          if (e.key === 'Enter') {
+            handleAddParamClick();
+          }
+        }}
         onChange={handleAddParamChange}
       />
       <Button

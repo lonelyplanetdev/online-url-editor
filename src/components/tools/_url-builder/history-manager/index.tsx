@@ -3,13 +3,13 @@
 import { ScrollArea } from '~/components/ui/scroll-area';
 import { Card, CardFooter, CardHeader } from '~/components/ui/card';
 
-import { useURLStore } from '~/store/urls';
-import { URLBuilderHistoryItem as HistoryItem } from './item';
-import { URLBuilderHistoryClearButton as HistoryClearButton } from './clear-button';
+import { useUrlBuilderStore } from '~/components/tools/url-builder/store';
+import { HistoryItem } from './item';
+import { ClearHistoryButton } from './clear-button';
 
-export function URLBuilderHistory() {
-  const urls = useURLStore((state) => state.urls);
-  const sorted = urls.sort((a, b) => b.timestamp - a.timestamp);
+export function HistoryManager() {
+  const urls = useUrlBuilderStore((state) => state.urls);
+  const sorted = urls.sort((a, b) => b.lastEdited - a.lastEdited);
 
   return (
     <Card className="col-span-1 flex h-full min-h-0 min-w-0 flex-col bg-primary-foreground">
@@ -27,14 +27,14 @@ export function URLBuilderHistory() {
           )}
           {sorted.map((url) => (
             <HistoryItem
-              {...url}
+              item={url}
               key={url.id}
             />
           ))}
         </ul>
       </ScrollArea>
       <CardFooter className="border-t p-3">
-        <HistoryClearButton />
+        <ClearHistoryButton />
       </CardFooter>
     </Card>
   );

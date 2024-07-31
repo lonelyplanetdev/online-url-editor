@@ -2,10 +2,10 @@
 
 import * as React from 'react';
 import { Button } from '~/components/ui/button';
-import { useURLStore } from '~/store/urls';
+import { useUrlBuilderStore } from '~/components/tools/url-builder/store';
 
-export function URLBuilderHistoryClearButton() {
-  const { wipeUrls } = useURLStore();
+export function ClearHistoryButton() {
+  const clearUrls = useUrlBuilderStore((state) => state.clearUrls);
   const [confirming, setConfirming] = React.useState<boolean>(false);
   const [message, setMessage] = React.useState<string | null>(null);
 
@@ -16,7 +16,7 @@ export function URLBuilderHistoryClearButton() {
         size="sm"
         className="basis-1/2"
         onClick={() => {
-          wipeUrls();
+          clearUrls();
           setConfirming(false);
           setMessage('History Cleared');
           setTimeout(() => setMessage(null), 500);
@@ -35,23 +35,12 @@ export function URLBuilderHistoryClearButton() {
     </div>
   ) : (
     <Button
-      variant="destructive"
+      variant={message ? 'secondary' : 'destructive'}
       size="sm"
       className="w-full"
-      disabled={message !== null}
-      onClick={() => setConfirming(true)}
+      onClick={() => !message && setConfirming(true)}
     >
       {message || 'Clear History'}
     </Button>
   );
-
-  // return (
-  //   <Button
-  //     variant="destructive"
-  //     size="sm"
-  //     className="w-full"
-  //   >
-  //     Clear History
-  //   </Button>
-  // );
 }

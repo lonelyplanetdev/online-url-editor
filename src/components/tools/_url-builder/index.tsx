@@ -1,7 +1,8 @@
-import { URLBuilderHistory as History } from './history';
-import { URLBuilderEditor as Editor } from './edit';
 import { validateRequest } from '~/lib/auth';
 import { db } from '~/lib/db';
+
+import { HistoryManager } from './history-manager';
+import { Editor } from './editor';
 
 export async function URLBuilder() {
   const { user } = await validateRequest();
@@ -24,7 +25,7 @@ export async function URLBuilder() {
 
   return (
     <div className="container grid w-screen grow grid-cols-[256px_auto] gap-4">
-      <History />
+      <HistoryManager />
       <Editor templates={templates} />
     </div>
   );

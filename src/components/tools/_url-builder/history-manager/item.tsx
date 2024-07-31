@@ -3,38 +3,25 @@
 import { Trash2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
-import { useEditorStore } from '~/store/editor';
-import { useURLStore } from '~/store/urls';
+import {
+  UrlItem,
+  useUrlBuilderStore,
+} from '~/components/tools/url-builder/store';
 
-interface URLBuilderHistoryItemProps {
-  id: string;
-  url: string;
-  unencodedParams: string[];
-  timestamp: number;
+interface HistoryItemProps {
+  item: UrlItem;
 }
-export function URLBuilderHistoryItem({
-  id,
-  url,
-  unencodedParams,
-  timestamp,
-}: URLBuilderHistoryItemProps) {
-  const setSelected = useURLStore((state) => state.setSelected);
-  const removeUrl = useURLStore((state) => state.removeUrl);
-  const loadItem = useEditorStore((state) => state.loadItem);
-  const setParams = useEditorStore((state) => state.setParams);
-  const setBlank = useEditorStore((state) => state.setBlank);
-  const selected = useURLStore((state) => state.selected);
+export function HistoryItem({ item }: HistoryItemProps) {
+  const { id, base, lastEdited } = item;
+  const selected = useUrlBuilderStore((state) => state.selected);
+  const setSelected = useUrlBuilderStore((state) => state.setSelected);
+  const removeUrl = useUrlBuilderStore((state) => state.removeUrl);
 
   const isSelected = selected === id;
 
   function handleSelect() {
-    if (!isSelected) {
-      loadItem({ url, id }, unencodedParams);
-      setSelected(id);
-    } else {
-      setBlank();
-      setSelected(null);
-    }
+    if (!isSelected) setSelected(id);
+    else setSelected(null);
   }
 
   function handleRemove(e: React.MouseEvent) {
@@ -56,12 +43,12 @@ export function URLBuilderHistoryItem({
         <div className="w-[calc(256px-24px)] group-hover:w-[calc(256px-54px)]">
           <h3
             className="line-clamp-1 shrink overflow-hidden text-ellipsis whitespace-nowrap text-xs"
-            title={url}
+            title={base}
           >
-            {url}
+            {base}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {new Date(timestamp).toLocaleString()}
+            {new Date(lastEdited).toLocaleString()}
           </p>
         </div>
         <Button

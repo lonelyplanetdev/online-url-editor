@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
 
 // Define the store
 interface URLState {
@@ -32,7 +31,7 @@ interface URLState {
 // Create the store
 export const useURLStore = create<URLState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       urls: [],
       selected: null,
       setSelected: (id) =>
