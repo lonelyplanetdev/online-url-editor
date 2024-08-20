@@ -7,16 +7,17 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
 model User {
-  id       String @id @default(cuid())
-  username String @unique
-  password String
+  id        String @id @default(cuid())
+  username  String @unique
+  password  String
+  superuser Boolean @default(false)
 
-  sessions Session[]
-  templates Template[]
+  sessions            Session[]
 }
 
 model Session {
@@ -27,27 +28,30 @@ model Session {
   user User @relation(references: [id], fields: [userId], onDelete: Cascade)
 }
 
-model Template {
+// A template is a collection of fields that can be used to generate a URL
+model URLBuilderTemplate {
   id      String  @id @default(cuid())
   name    String
-  color   String?
-  userId  String
 
-  user    User            @relation(references: [id], fields: [userId], onDelete: Cascade)
-  fields  TemplateField[]
+  fields URLBuilderTemplateField[]
 }
 
-model TemplateField {
-  id           String  @id @default(cuid())
-  templateId   String
-  param        String
-  type         String
-  defaultValue String?
-  hidden       Boolean @default(false)
-  required     Boolean
-  order        Int
+enum URLBuilderTemplateFieldType {
+  TEXT
+  LIST
+}
 
-  template Template @relation(references: [id], fields: [templateId], onDelete: Cascade)
+model URLBuilderTemplateField {
+  templateId    String
 
-  @@unique([templateId, param])
+  key           String
+  type          URLBuilderTemplateFieldType
+  defaultValue  String @default("")
+  required      Boolean @default(false)
+  hidden        Boolean @default(false)
+  encoded       Boolean @default(true)
+
+  template      URLBuilderTemplate @relation(references: [id], fields: [templateId], onDelete: Cascade)
+
+  @@id([templateId, key])
 }

@@ -5,7 +5,7 @@ import { validateRequest } from '~/lib/auth';
 export async function AuthStatus() {
   const { user } = await validateRequest();
 
-  const link = user ? '/auth/logout' : '/auth/login';
+  const link = user ? '/auth/signout' : '/auth/signin';
   const text = user ? 'Log Out' : 'Log In';
 
   return (

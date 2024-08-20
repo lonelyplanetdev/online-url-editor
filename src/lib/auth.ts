@@ -19,6 +19,7 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (attributes) => {
     return {
       // attributes has the type of DatabaseUserAttributes
+      superuser: attributes.superuser,
       username: attributes.username,
     };
   },
@@ -60,7 +61,7 @@ export const validateRequest = React.cache(
   },
 );
 
-export const loginUser = async (username: string, password: string) => {
+export const signinUser = async (username: string, password: string) => {
   const user = await db.user.findFirst({
     where: {
       username,
@@ -130,4 +131,5 @@ declare module 'lucia' {
 
 interface DatabaseUserAttributes {
   username: string;
+  superuser: boolean;
 }
