@@ -1,6 +1,5 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
-import { Footer } from '~/components/footer';
 import { ThemeProvider } from '~/components/theme-provider';
 
 import { cn } from '~/lib/utils';
