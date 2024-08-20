@@ -34,7 +34,8 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   function handleTemplateChange(templateId: string | null) {
     console.log('handleTemplateChange', templateId);
     setSelectedTemplate(templateId);
-    setOutput(parseInputs(url || '', params));
+    setParams([]);
+    setOutput('');
   }
 
   function handleParametersChange(params: string[]) {

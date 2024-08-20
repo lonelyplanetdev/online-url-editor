@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import { Input } from '~/components/ui/input';
 import { URLBuilderTemplateField } from './util';
+import { Textarea } from '~/components/ui/textarea';
 
 interface ParametersListProps {
   fields: URLBuilderTemplateField[];
@@ -22,6 +23,8 @@ function ParametersList({ fields, onChange }: ParametersListProps) {
 
         params.current[field.key] = param;
       });
+
+    onChange?.(Object.values(params.current));
   }, [fields]);
 
   return (
@@ -83,14 +86,30 @@ function ParamaterRow({
       <Input
         readOnly
         defaultValue={key}
-        className="w-48"
+        className="h-full w-48"
       />
-      <Input
-        defaultValue={value}
-        className="grow"
-        onChange={(e) => onChange(key, e.target.value, encoded)}
-      />
-      {type}
+      {type === 'LIST' ? (
+        <Textarea
+          defaultValue={value}
+          className="grow"
+          placeholder="comma or newline separated list"
+          onChange={(e) => {
+            const parsed = e.target.value
+              .replace(/\n/g, ',')
+              .replace(/,{2,}/g, ',')
+              .replace(/,$/, '')
+              .replace(/^,/, '');
+
+            onChange(key, parsed, encoded);
+          }}
+        />
+      ) : (
+        <Input
+          defaultValue={value}
+          className="grow"
+          onChange={(e) => onChange(key, e.target.value, encoded)}
+        />
+      )}
     </div>
   );
 }
