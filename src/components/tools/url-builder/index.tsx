@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { URLBuilderTemplate } from './util';
+import type { URLBuilderTemplate, URLBuilderTemplateField } from './util';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { URLBox } from './url-box';
@@ -17,6 +17,8 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   const [selectedTemplate, setSelectedTemplate] = React.useState<
     string | null
   >();
+  const [fields, setFields] = React.useState<URLBuilderTemplateField[]>([]);
+
   const [url, setUrl] = React.useState<string | null>(null);
   const [params, setParams] = React.useState<string[]>([]);
   const [output, setOutput] = React.useState<string>('');
@@ -24,27 +26,57 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   function handleManualURLChange(url: string) {
     console.log('handleManualURLChange', url);
     setUrl(url);
-    setOutput(parseInputs(url, params));
-  }
 
-  React.useEffect(() => {
-    setOutput(parseInputs(url || '', params));
-  }, [params]);
+    if (url !== '') setOutput(generateUrl(url, params));
+  }
 
   function handleTemplateChange(templateId: string | null) {
     console.log('handleTemplateChange', templateId);
     setSelectedTemplate(templateId);
+
+    const exisitngParams = getExisitngParams(url || '');
+    let templateFields =
+      templates.find((t) => t.id === templateId)?.fields || [];
+
+    templateFields = templateFields.map((field) => {
+      if (exisitngParams[field.key])
+        field.defaultValue = exisitngParams[field.key];
+
+      return field;
+    });
+
+    setFields(templateFields);
     setParams([]);
-    setOutput('');
+
+    setOutput(generateUrl(url || '', []));
   }
 
   function handleParametersChange(params: string[]) {
     console.log('handleParametersChange', params);
 
     setParams(params);
+    setOutput(generateUrl(url || '', params));
   }
 
-  function parseInputs(url: string, params: string[]) {
+  function getExisitngParams(url: string): Record<string, string> {
+    try {
+      const urlInstance = new URL(url);
+      const searchParams = new URLSearchParams(urlInstance.search);
+      const existingParams: Record<string, string> = {};
+
+      searchParams.forEach((value, key) => {
+        existingParams[key] = value;
+      });
+
+      console.log('getExisitngParams', existingParams);
+
+      return existingParams;
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function generateUrl(url: string, params: string[]) {
     try {
       const urlInstance = new URL(url);
       const paramKeys = params.map((param) => param.split('=')[0]);
@@ -52,21 +84,17 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
       const searchParams = new URLSearchParams(urlInstance.search);
 
       searchParams.forEach((_, key) => {
-        if (paramKeys.includes(key)) return;
-        searchParams.delete(key);
+        if (paramKeys.includes(key)) searchParams.delete(key);
       });
 
-      // prefix is ? if no search params are present, otherwise it's &
+      urlInstance.search = searchParams.toString();
+
       const prefix = searchParams.toString() ? '&' : '?';
-
       const outputHref = urlInstance.href;
-
       const final =
         outputHref + (params.length ? `${prefix}${params.join('&')}` : '');
-      console.log('final', final);
       return final;
     } catch (error) {
-      console.error(error);
       return '';
     }
   }
@@ -86,9 +114,7 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
         <div className="grid gap-1.5">
           <Label>Parameters</Label>
           <ParametersList
-            fields={
-              templates.find((t) => t.id === selectedTemplate)?.fields || []
-            }
+            fields={fields}
             onChange={handleParametersChange}
           />
         </div>

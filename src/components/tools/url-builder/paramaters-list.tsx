@@ -14,6 +14,7 @@ function ParametersList({ fields, onChange }: ParametersListProps) {
   const params = React.useRef<{ [key: string]: string }>({});
 
   React.useEffect(() => {
+    params.current = {};
     fields
       .filter((field) => !!field.defaultValue)
       .forEach((field) => {

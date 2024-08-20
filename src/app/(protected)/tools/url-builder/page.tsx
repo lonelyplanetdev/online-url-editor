@@ -16,10 +16,12 @@ export default async function ToolURLBuilderPage() {
 
   const userUrlBuilderTemplates = (await db.uRLBuilderTemplate
     .findMany({
+      orderBy: [{ name: 'asc' }],
       select: {
         id: true,
         name: true,
         fields: {
+          orderBy: [{ type: 'asc' }, { key: 'asc' }],
           select: {
             key: true,
             type: true,
