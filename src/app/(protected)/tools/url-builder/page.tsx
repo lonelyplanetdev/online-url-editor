@@ -26,7 +26,6 @@ export default async function ToolURLBuilderPage() {
             key: true,
             type: true,
             defaultValue: true,
-            required: true,
             hidden: true,
             encoded: true,
           },

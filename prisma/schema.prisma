@@ -47,7 +47,6 @@ model URLBuilderTemplateField {
   key           String
   type          URLBuilderTemplateFieldType
   defaultValue  String @default("")
-  required      Boolean @default(false)
   hidden        Boolean @default(false)
   encoded       Boolean @default(true)
 

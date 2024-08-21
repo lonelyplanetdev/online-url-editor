@@ -73,7 +73,6 @@ export type URLBuilderTemplateField = {
   key: string;
   type: 'text' | 'list';
   defaultValue: string;
-  required: boolean;
   hidden: boolean;
   encoded: boolean;
 };
