@@ -21,7 +21,6 @@ export function OutputBox({ output }: OutputProps) {
         <div className="relative">
           <Textarea
             readOnly
-            className="resize-none"
             id="url_builder_output"
             value={value}
           />

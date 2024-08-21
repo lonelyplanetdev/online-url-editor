@@ -43,7 +43,7 @@ export function URLBox({ url, onValidChange }: URLBoxProps) {
           URL {error ? `- ${error}` : ''}
         </Label>
         <Textarea
-          className={`resize-none ${error ? 'border-destructive' : ''}`}
+          className={error ? 'border-destructive' : ''}
           id="url_builder_url"
           value={value}
           onChange={(e) => handleChange(e.target.value)}

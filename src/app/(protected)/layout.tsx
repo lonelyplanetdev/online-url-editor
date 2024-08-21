@@ -42,13 +42,13 @@ export default function ToolLayout({
                 disabled: false,
               },
               {
-                name: 'Report Analysis - WIP',
-                href: '/tools/report-analysis',
-                disabled: true,
+                name: 'Report Reformatter',
+                href: '/tools/report-reformatter',
+                disabled: false,
               },
               {
-                name: 'Report Reformatter - WIP',
-                href: '/tools/report-reformatter',
+                name: 'Report Analysis - WIP',
+                href: '/tools/report-analysis',
                 disabled: true,
               },
             ]}

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import type { URLBuilderTemplate, URLBuilderTemplateField } from './util';
-import { Input } from '~/components/ui/input';
+
 import { Label } from '~/components/ui/label';
 import { URLBox } from './url-box';
 import { TemplateSelect } from './template-select';
