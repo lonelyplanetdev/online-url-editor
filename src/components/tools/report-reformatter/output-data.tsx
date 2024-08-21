@@ -25,7 +25,7 @@ interface OutputDataProps {
 function OutputData({ output }: OutputDataProps) {
   const outputString = output ? [...output.map((row) => Object.values(row).join('\t'))].join('\n') : '';
 
-  const [outputView, setOutputView] = React.useState<'table' | 'string'>('string');
+  const [outputView, setOutputView] = React.useState<'table' | 'string'>('table');
 
   return (
     <div className="-mt-2 grid gap-1.5">
@@ -33,44 +33,52 @@ function OutputData({ output }: OutputDataProps) {
         <Label>Output Results</Label>
         <Button
           variant="secondary"
+          disabled={!(output && output.length > 0)}
+          className="w-36"
           onClick={() => setOutputView(outputView === 'table' ? 'string' : 'table')}
         >
           {outputView === 'table' ? 'View as Text' : 'View as Table'}
         </Button>
       </div>
-      {outputView === 'string' ? (
-        <Textarea
-          readOnly
-          className="h-48 max-h-96"
-          defaultValue={outputString}
-        />
-      ) : (
-        <ScrollArea className="max-h-96 overflow-auto border">
-          <Table>
-            <TableHeader className="sticky top-0 bg-primary-foreground">
-              <TableRow>
-                {Object.keys(output?.[0] ?? {}).map((header) => (
-                  <TableHead key={header}>
-                    {header
-                      .replace(/_/g, ' ')
-                      .replace(/\b\w/g, (char) => char.toUpperCase())
-                      .replace('Cpc', 'CPC')
-                      .replace('CpR', 'CPR')}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {output?.map((row, index) => (
-                <TableRow key={index}>
-                  {Object.values(row).map((value, index) => (
-                    <TableCell key={index}>{value}</TableCell>
+      {output && output.length > 0 ? (
+        outputView === 'string' ? (
+          <Textarea
+            readOnly
+            className="h-96 resize-none"
+            defaultValue={outputString}
+          />
+        ) : (
+          <ScrollArea className="h-96 overflow-auto rounded-md border">
+            <Table>
+              <TableHeader className="sticky top-0 bg-primary-foreground">
+                <TableRow>
+                  {Object.keys(output?.[0] ?? {}).map((header) => (
+                    <TableHead key={header}>
+                      {header
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (char) => char.toUpperCase())
+                        .replace('Cpc', 'CPC')
+                        .replace('CpR', 'CPR')}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </ScrollArea>
+              </TableHeader>
+              <TableBody>
+                {output?.map((row, index) => (
+                  <TableRow key={index}>
+                    {Object.values(row).map((value, index) => (
+                      <TableCell key={index}>{value}</TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        )
+      ) : (
+        <div className="flex h-96 items-center justify-center rounded-md border">
+          <p className="text-sm text-muted-foreground">No Data to Display</p>
+        </div>
       )}
     </div>
   );

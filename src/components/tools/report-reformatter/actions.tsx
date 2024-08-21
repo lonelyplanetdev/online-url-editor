@@ -13,7 +13,7 @@ export function Actions({ output }: ActionsProps) {
   const outputTSVString = output ? [...output.map((row) => Object.values(row).join('\t'))].join('\n') : '';
   const outputCSVSring = output ? [...output.map((row) => Object.values(row).join(','))].join('\n') : '';
 
-  const [copyFullButtonLabel, setCopyFullButtonLabel] = useState('Copy Data');
+  const [copyFullButtonLabel, setCopyFullButtonLabel] = useState('Copy TSV Data');
 
   return (
     <div>
@@ -22,14 +22,14 @@ export function Actions({ output }: ActionsProps) {
         <div className="flex flex-row gap-2">
           <Button
             variant="secondary"
-            className="w-32"
-            disabled={!output}
+            className="w-48"
+            disabled={!(output && output.length > 0)}
             onClick={() => {
               // copy full url
               navigator.clipboard.writeText(outputTSVString);
               setCopyFullButtonLabel('Copied!');
               setTimeout(() => {
-                setCopyFullButtonLabel('Copy Data');
+                setCopyFullButtonLabel('Copy TSV Data');
               }, 1000);
             }}
           >
@@ -38,8 +38,8 @@ export function Actions({ output }: ActionsProps) {
           <Button
             variant="outline"
             className="w-48"
-            disabled={!output}
-            asChild={!!output}
+            disabled={!(output && output.length > 0)}
+            asChild={!!(output && output.length > 0)}
           >
             <Link
               href={`data:text/csv;charset=utf-8,${encodeURIComponent(outputCSVSring)}`}
