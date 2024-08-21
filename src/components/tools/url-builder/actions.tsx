@@ -1,12 +1,20 @@
 'use client';
 
+import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
+import { cn } from '~/lib/utils';
 
 interface ActionsProps {
   output?: string;
 }
 export function Actions({ output }: ActionsProps) {
+  const [copyFullButtonLabel, setCopyFullButtonLabel] =
+    useState('Copy Full URL');
+  const [copyDomainButtonLabel, setCopyDomainButtonLabel] =
+    useState('Copy Domain Only');
+
   return (
     <div>
       <div className="grid gap-1.5">
@@ -14,30 +22,47 @@ export function Actions({ output }: ActionsProps) {
         <div className="flex flex-row gap-2">
           <Button
             variant="secondary"
-            className="px-6"
+            className="w-48"
             onClick={() => {
-              console.log('copy to clipboard');
+              // copy full url
+              navigator.clipboard.writeText(output || '');
+              setCopyFullButtonLabel('Copied!');
+              setTimeout(() => {
+                setCopyFullButtonLabel('Copy Full URL');
+              }, 1000);
             }}
           >
-            Copy Full URL
+            {copyFullButtonLabel}
           </Button>
           <Button
             variant="outline"
-            className="px-6"
-            onClick={() => {
-              console.log('open in new tab');
-            }}
+            className="w-48"
+            disabled={!output}
+            asChild={!!output}
           >
-            Preview URL
+            <Link
+              href={output || ''}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Preview URL
+            </Link>
           </Button>
           <Button
             variant="outline"
-            className="px-6"
+            className="w-48"
             onClick={() => {
-              console.log('open in new tab');
+              // copy domain only
+              const url = new URL(output || '');
+              navigator.clipboard.writeText(url.origin);
+              setCopyDomainButtonLabel('Copied!');
+              setTimeout(() => {
+                setCopyDomainButtonLabel('Copy Domain Only');
+              }, 1000);
             }}
+            disabled={!output}
           >
-            Copy Domain Only
+            {copyDomainButtonLabel}
           </Button>
         </div>
       </div>

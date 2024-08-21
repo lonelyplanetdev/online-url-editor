@@ -51,12 +51,15 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     setOutput(generateUrl(url || '', []));
   }
 
-  function handleParametersChange(params: string[]) {
-    console.log('handleParametersChange', params);
+  const handleParametersChange = React.useCallback(
+    (params: string[]) => {
+      console.log('handleParametersChange', params);
 
-    setParams(params);
-    setOutput(generateUrl(url || '', params));
-  }
+      setParams(params);
+      setOutput(generateUrl(url || '', params));
+    },
+    [url],
+  );
 
   function getExisitngParams(url: string): Record<string, string> {
     try {
