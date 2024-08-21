@@ -150,7 +150,7 @@ export function ManageForm() {
           className="w-full"
           disabled={proccessing}
         >
-          Signin
+          Update Account
         </Button>
       </form>
     </Form>
