@@ -23,6 +23,7 @@ export function Actions({ output }: ActionsProps) {
           <Button
             variant="secondary"
             className="w-48"
+            disabled={!output}
             onClick={() => {
               // copy full url
               navigator.clipboard.writeText(output || '');
