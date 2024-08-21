@@ -27,7 +27,7 @@ export function SignoutForm({ successRedirect }: SignoutFormProps) {
       signout().then((result) => {
         if (result.error) return setError(result.error);
         setError(null);
-        setSuccess('Signout successful, redirecting...');
+        setSuccess('Sign Out successful, redirecting...');
         setTimeout(() => {
           router.push(successRedirect);
         }, 500);
@@ -71,7 +71,7 @@ export function SignoutForm({ successRedirect }: SignoutFormProps) {
         className="w-full"
         disabled={pending || !!success}
       >
-        {success ? 'Logging out...' : pending ? 'Logging out...' : 'Signout'}
+        {success ? 'Signing out...' : pending ? 'Signing out...' : 'Sign Out'}
       </Button>
     </form>
   );

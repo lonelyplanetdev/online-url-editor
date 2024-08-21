@@ -7,7 +7,7 @@ export default function AuthSigninPage() {
     <main className="flex h-screen flex-col items-center justify-center">
       <Card className="w-full max-w-sm bg-primary-foreground">
         <CardHeader>
-          <CardTitle className="text-2xl">Signin</CardTitle>
+          <CardTitle className="text-2xl">Sign In</CardTitle>
         </CardHeader>
         <CardContent>
           <SigninForm successRedirect="/" />

@@ -73,7 +73,7 @@ export default function ToolLayout({
               size="sm"
               asChild
             >
-              <Link href="/auth/signout">Signout</Link>
+              <Link href="/auth/signout">Sign Out</Link>
             </Button>
           </div>
         </div>

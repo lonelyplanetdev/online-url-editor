@@ -109,7 +109,7 @@ export function SigninForm({ successRedirect }: SigninFormProps) {
           className="w-full"
           disabled={proccessing}
         >
-          Signin
+          Sign In
         </Button>
       </form>
     </Form>

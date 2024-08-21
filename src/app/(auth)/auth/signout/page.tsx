@@ -7,7 +7,7 @@ export default async function AuthSignoutPage() {
     <main className="flex h-screen flex-col items-center justify-center">
       <Card className="w-full max-w-sm bg-primary-foreground">
         <CardHeader>
-          <CardTitle className="text-2xl">Signout</CardTitle>
+          <CardTitle className="text-2xl">Sign Out</CardTitle>
         </CardHeader>
         <CardContent>
           <SignoutForm successRedirect="/auth/signin" />
