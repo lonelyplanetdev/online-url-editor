@@ -39,7 +39,7 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
       templates.find((t) => t.id === templateId)?.fields || [];
 
     templateFields = templateFields.map((field) => {
-      if (exisitngParams[field.key])
+      if (!field.hidden && exisitngParams[field.key])
         field.defaultValue = exisitngParams[field.key];
 
       return field;
