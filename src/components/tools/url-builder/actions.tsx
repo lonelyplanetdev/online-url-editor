@@ -54,7 +54,7 @@ export function Actions({ output }: ActionsProps) {
             onClick={() => {
               // copy domain only
               const url = new URL(output || '');
-              navigator.clipboard.writeText(url.origin);
+              navigator.clipboard.writeText(url.hostname.replace(/^www\./, ''));
               setCopyDomainButtonLabel('Copied!');
               setTimeout(() => {
                 setCopyDomainButtonLabel('Copy Domain Only');
