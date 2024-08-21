@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { ModeToggle } from '~/components/mode-toggle';
 import TabList from '~/components/tab-list';
 import { Button } from '~/components/ui/button';
@@ -77,7 +78,17 @@ export default function ToolLayout({
           </div>
         </div>
       </div>
-      <div>{children}</div>
+      <div>
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center">
+              Loading...
+            </div>
+          }
+        >
+          {children}
+        </Suspense>
+      </div>
     </div>
   );
 }

@@ -19,7 +19,7 @@ export function SignoutForm({ successRedirect }: SignoutFormProps) {
   const [pending, startTransition] = React.useTransition();
   const router = useRouter();
 
-  function onSubmit() {
+  const onSubmit = React.useCallback(() => {
     setError(null);
     setSuccess(null);
 
@@ -33,11 +33,11 @@ export function SignoutForm({ successRedirect }: SignoutFormProps) {
         }, 500);
       });
     });
-  }
+  }, [router, startTransition, successRedirect]);
 
   React.useEffect(() => {
     onSubmit();
-  }, []);
+  }, [onSubmit]);
 
   return (
     <form

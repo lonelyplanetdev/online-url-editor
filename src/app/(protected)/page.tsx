@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   PageContent,
@@ -6,15 +5,7 @@ import {
   PageHeader,
   PageTitle,
 } from '~/components/page-details';
-import { Button } from '~/components/ui/button';
-import {
-  Card,
-  CardTitle,
-  CardHeader,
-  CardContent,
-  CardFooter,
-  CardDescription,
-} from '~/components/ui/card';
+
 import { validateRequest } from '~/lib/auth';
 
 export default async function HomePage() {

@@ -38,9 +38,8 @@ function useTheme(): [string, string, () => void] {
   const [nextInRotation, setNextInRotation] = useState<string>('system');
   const [displayLabel, setDisplayLabel] = useState<string>('System');
 
-  const themeRotation = ['system', 'light', 'dark'];
-
   useEffect(() => {
+    const themeRotation = ['system', 'light', 'dark'];
     const currentTheme = theme || 'system';
 
     setCurrentTheme(currentTheme);

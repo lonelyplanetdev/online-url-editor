@@ -26,7 +26,7 @@ function ParametersList({ fields, onChange }: ParametersListProps) {
       });
 
     onChange?.(Object.values(params.current));
-  }, [fields]);
+  }, [fields, onChange]);
 
   return (
     <div className="grid gap-2">

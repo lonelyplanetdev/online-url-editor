@@ -36,7 +36,7 @@ export default async function ToolURLBuilderPage() {
     .catch(() => [])) as URLBuilderTemplate[];
 
   return (
-    <main>
+    <>
       <PageHeader>
         <PageTitle>URL Builder</PageTitle>
         <PageDescription>Build and edit URLs on the fly.</PageDescription>
@@ -44,6 +44,6 @@ export default async function ToolURLBuilderPage() {
       <PageContent container>
         <URLBuilderTool templates={userUrlBuilderTemplates} />
       </PageContent>
-    </main>
+    </>
   );
 }
