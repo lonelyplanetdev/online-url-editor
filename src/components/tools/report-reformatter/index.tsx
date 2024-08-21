@@ -15,15 +15,17 @@ export type ReportDataRow = {
 import { ReportUploads } from './report-uploads';
 import { OutputData } from './output-data';
 import { Actions } from './actions';
+import { Exclusions } from './exclusions';
 
 function ReportReformatterTool() {
   const [facebookReport, setFacebookReport] = React.useState<ReportDataRow[] | null>(null);
   const [newsbreakReport, setNewsbreakReport] = React.useState<ReportDataRow[] | null>(null);
+
   const [combinedData, setCombinedData] = React.useState<ReportDataRow[]>([]);
+  const [excludeList, setExcludeList] = React.useState<string[]>([]);
 
   React.useEffect(() => {
-    const goodReports = [facebookReport, newsbreakReport].filter((report) => report !== null) as ReportDataRow[][];
-    const combined = goodReports.flat();
+    const combined = [...(facebookReport ?? []), ...(newsbreakReport ?? [])];
     setCombinedData(combined);
   }, [facebookReport, newsbreakReport]);
 
@@ -33,8 +35,9 @@ function ReportReformatterTool() {
         onFacebookData={setFacebookReport}
         onNewsbreakData={setNewsbreakReport}
       />
-      <OutputData output={combinedData} />
-      <Actions output={combinedData} />
+      <OutputData output={combinedData.filter((row) => !excludeList.includes(row.campaign_name))} />
+      <Actions output={combinedData.filter((row) => !excludeList.includes(row.campaign_name))} />
+      <Exclusions onExclusionsChange={(exclusions) => setExcludeList(exclusions)} />
     </div>
   );
 }

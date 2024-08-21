@@ -44,16 +44,19 @@ function OutputData({ output }: OutputDataProps) {
         outputView === 'string' ? (
           <Textarea
             readOnly
-            className="h-96 resize-none"
+            className="h-60 resize-none"
             defaultValue={outputString}
           />
         ) : (
-          <ScrollArea className="h-96 overflow-auto rounded-md border">
+          <ScrollArea className="h-60 overflow-auto rounded-md border">
             <Table>
               <TableHeader className="sticky top-0 bg-primary-foreground">
                 <TableRow>
                   {Object.keys(output?.[0] ?? {}).map((header) => (
-                    <TableHead key={header}>
+                    <TableHead
+                      key={header}
+                      className="h-8"
+                    >
                       {header
                         .replace(/_/g, ' ')
                         .replace(/\b\w/g, (char) => char.toUpperCase())
@@ -67,7 +70,12 @@ function OutputData({ output }: OutputDataProps) {
                 {output?.map((row, index) => (
                   <TableRow key={index}>
                     {Object.values(row).map((value, index) => (
-                      <TableCell key={index}>{value}</TableCell>
+                      <TableCell
+                        key={index}
+                        className="py-2"
+                      >
+                        {value}
+                      </TableCell>
                     ))}
                   </TableRow>
                 ))}
@@ -76,7 +84,7 @@ function OutputData({ output }: OutputDataProps) {
           </ScrollArea>
         )
       ) : (
-        <div className="flex h-96 items-center justify-center rounded-md border">
+        <div className="flex h-60 items-center justify-center rounded-md border">
           <p className="text-sm text-muted-foreground">No Data to Display</p>
         </div>
       )}
