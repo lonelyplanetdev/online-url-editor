@@ -92,12 +92,12 @@ function ReportUploads({ onFacebookData, onNewsbreakData }: ReportUploadsProps) 
                     campaign_name: row.campaign_name,
                     spend: row.amount_spent
                       ? (parseFloat(row.amount_spent.replace(/[^0-9.]/g, '')) || 0).toFixed(2)
-                      : 0,
-                    uniques: row.link_clicks ? parseInt(row.link_clicks.replace(/[^0-9.]/g, '')) || 0 : 0,
-                    cpc: row.cpc ? (parseFloat(row.cpc.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : 0,
+                      : '0.00',
+                    uniques: row.link_clicks ? parseInt(row.link_clicks.replace(/[^0-9.]/g, '')) || 0 : '0.00',
+                    cpc: row.cpc ? (parseFloat(row.cpc.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : '0.00',
                     cpr: row.cost_per_lead
                       ? (parseFloat(row.cost_per_lead.replace(/[^0-9.]/g, '')) || 0).toFixed(2)
-                      : 0,
+                      : '0.00',
                     traffic_source: 'Facebook',
                   })) as ReportDataRow[];
 
@@ -198,10 +198,10 @@ function ReportUploads({ onFacebookData, onNewsbreakData }: ReportUploadsProps) 
                   let parsedData = data.map((row: any) => ({
                     date: row.date,
                     campaign_name: row.campaign,
-                    spend: row.cost ? (parseFloat(row.cost.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : 0,
-                    uniques: row.click ? parseInt(row.click.replace(/[^0-9.]/g, '')) || 0 : 0,
-                    cpc: row.cpc ? (parseFloat(row.cpc.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : 0,
-                    cpr: row.cpa ? (parseFloat(row.cpa.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : 0,
+                    spend: row.cost ? (parseFloat(row.cost.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : '0.00',
+                    uniques: row.click ? parseInt(row.click.replace(/[^0-9.]/g, '')) || 0 : '0.00',
+                    cpc: row.cpc ? (parseFloat(row.cpc.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : '0.00',
+                    cpr: row.cpa ? (parseFloat(row.cpa.replace(/[^0-9.]/g, '')) || 0).toFixed(2) : '0.00',
                     traffic_source: 'News Break',
                   })) as ReportDataRow[];
 

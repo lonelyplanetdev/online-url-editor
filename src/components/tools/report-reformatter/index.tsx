@@ -36,8 +36,8 @@ function ReportReformatterTool() {
         onNewsbreakData={setNewsbreakReport}
       />
       <OutputData output={combinedData.filter((row) => !excludeList.includes(row.campaign_name))} />
-      <Actions output={combinedData.filter((row) => !excludeList.includes(row.campaign_name))} />
       <Exclusions onExclusionsChange={(exclusions) => setExcludeList(exclusions)} />
+      <Actions output={combinedData.filter((row) => !excludeList.includes(row.campaign_name))} />
     </div>
   );
 }

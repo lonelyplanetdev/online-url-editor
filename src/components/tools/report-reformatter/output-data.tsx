@@ -18,6 +18,7 @@ import {
 import { Textarea } from '~/components/ui/textarea';
 import { Button } from '~/components/ui/button';
 import { ScrollArea } from '~/components/ui/scroll-area';
+import { cn } from '~/lib/utils';
 
 interface OutputDataProps {
   output: ReportDataRow[] | null;
@@ -44,7 +45,7 @@ function OutputData({ output }: OutputDataProps) {
         outputView === 'string' ? (
           <Textarea
             readOnly
-            className="h-60 resize-none"
+            className="h-60 resize-none font-mono"
             defaultValue={outputString}
           />
         ) : (
@@ -55,7 +56,7 @@ function OutputData({ output }: OutputDataProps) {
                   {Object.keys(output?.[0] ?? {}).map((header) => (
                     <TableHead
                       key={header}
-                      className="h-8"
+                      className={cn('h-8', header === 'date' && 'w-28')}
                     >
                       {header
                         .replace(/_/g, ' ')
@@ -72,9 +73,15 @@ function OutputData({ output }: OutputDataProps) {
                     {Object.values(row).map((value, index) => (
                       <TableCell
                         key={index}
-                        className="py-2"
+                        className="py-2 font-mono"
                       >
-                        {value}
+                        {value === 'Facebook' ? (
+                          <span className="text-indigo-500">Facebook</span>
+                        ) : value === 'News Break' ? (
+                          <span className="text-red-500">News Break</span>
+                        ) : (
+                          value
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
