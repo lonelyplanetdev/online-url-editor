@@ -14,9 +14,7 @@ interface URLBuilderToolProps {
   templates: URLBuilderTemplate[];
 }
 export function URLBuilderTool({ templates }: URLBuilderToolProps) {
-  const [selectedTemplate, setSelectedTemplate] = React.useState<
-    string | null
-  >();
+  const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>();
   const [fields, setFields] = React.useState<URLBuilderTemplateField[]>([]);
 
   const [url, setUrl] = React.useState<string | null>(null);
@@ -24,23 +22,19 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   const [output, setOutput] = React.useState<string>('');
 
   function handleManualURLChange(url: string) {
-    console.log('handleManualURLChange', url);
     setUrl(url);
 
     if (url !== '') setOutput(generateUrl(url, params));
   }
 
   function handleTemplateChange(templateId: string | null) {
-    console.log('handleTemplateChange', templateId);
     setSelectedTemplate(templateId);
 
     const exisitngParams = getExisitngParams(url || '');
-    let templateFields =
-      templates.find((t) => t.id === templateId)?.fields || [];
+    let templateFields = templates.find((t) => t.id === templateId)?.fields || [];
 
     templateFields = templateFields.map((field) => {
-      if (!field.hidden && exisitngParams[field.key])
-        field.defaultValue = exisitngParams[field.key];
+      if (!field.hidden && exisitngParams[field.key]) field.defaultValue = exisitngParams[field.key];
 
       return field;
     });
@@ -53,8 +47,6 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
 
   const handleParametersChange = React.useCallback(
     (params: string[]) => {
-      console.log('handleParametersChange', params);
-
       setParams(params);
       setOutput(generateUrl(url || '', params));
     },
@@ -86,16 +78,17 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
 
       const searchParams = new URLSearchParams(urlInstance.search);
 
+      const newSearchParams = new URLSearchParams();
+
       searchParams.forEach((_, key) => {
-        if (paramKeys.includes(key)) searchParams.delete(key);
+        if (!paramKeys.includes(key)) newSearchParams.append(key, searchParams.get(key)!);
       });
 
-      urlInstance.search = searchParams.toString();
+      urlInstance.search = newSearchParams.toString();
 
-      const prefix = searchParams.toString() ? '&' : '?';
+      const prefix = newSearchParams.toString() ? '&' : '?';
       const outputHref = urlInstance.href;
-      const final =
-        outputHref + (params.length ? `${prefix}${params.join('&')}` : '');
+      const final = outputHref + (params.length ? `${prefix}${params.join('&')}` : '');
       return final;
     } catch (error) {
       return '';
