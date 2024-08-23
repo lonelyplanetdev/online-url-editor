@@ -6,11 +6,7 @@ import TabList from '~/components/tab-list';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 
-export default function ToolLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ToolLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen grid-cols-[16rem_auto]">
       <div className="flex flex-col justify-between border-r bg-primary-foreground/50 p-4">
@@ -26,9 +22,7 @@ export default function ToolLayout({
             />
             <div>
               <h1 className="font-semibold">ARB Tools</h1>
-              <h2 className="text-xs text-muted-foreground">
-                PREMIUM TRAFFIC LIMITED
-              </h2>
+              <h2 className="text-xs text-muted-foreground">PREMIUM TRAFFIC LIMITED</h2>
             </div>
           </div>
           <Separator className="my-4" />
@@ -47,9 +41,9 @@ export default function ToolLayout({
                 disabled: false,
               },
               {
-                name: 'Report Analysis - WIP',
-                href: '/tools/report-analysis',
-                disabled: true,
+                name: 'DOTS Analysis',
+                href: '/tools/dots-analysis',
+                disabled: false,
               },
             ]}
           />
@@ -79,13 +73,7 @@ export default function ToolLayout({
         </div>
       </div>
       <div>
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center">
-              Loading...
-            </div>
-          }
-        >
+        <Suspense fallback={<div className="flex h-full items-center justify-center">Loading...</div>}>
           {children}
         </Suspense>
       </div>
