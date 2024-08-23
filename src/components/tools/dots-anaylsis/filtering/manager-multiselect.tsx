@@ -53,6 +53,7 @@ export function ManagerMultiselect({ managers, onManagersSelect }: ManagerMultis
         <DropdownMenuSeparator />
         {managers.map((manager) => (
           <DropdownMenuCheckboxItem
+            key={manager}
             onClick={(e) => {
               e.preventDefault();
               handleManagerChange(manager, !selectedManagers.includes(manager));

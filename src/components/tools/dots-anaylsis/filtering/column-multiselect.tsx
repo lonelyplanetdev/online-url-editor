@@ -53,6 +53,7 @@ export function ColumnMultiselect({ columns, onColumnsSelect }: ColumnMultiselec
         <DropdownMenuSeparator />
         {columns.map((column) => (
           <DropdownMenuCheckboxItem
+            key={column}
             onClick={(e) => {
               e.preventDefault();
               handleColumnChange(column, !selectedColumns.includes(column));

@@ -39,7 +39,9 @@ function Filtering({ onSearchName, onDateRange, onMangersFilter, onColumnsFilter
       <div className="flex flex-col gap-2 xl:flex-row">
         <DateRangePicker
           className="w-full grow xl:basis-1/4"
-          onRangeSelect={(range) => setDateRange(range)}
+          onRangeSelect={React.useCallback((range: any) => {
+            setDateRange(range);
+          }, [])}
         />
         <Input
           type="text"
@@ -50,15 +52,15 @@ function Filtering({ onSearchName, onDateRange, onMangersFilter, onColumnsFilter
         />
         <ManagerMultiselect
           managers={managers}
-          onManagersSelect={(selected) => {
+          onManagersSelect={React.useCallback((selected) => {
             onMangersFilter(selected);
-          }}
+          }, [])}
         />
         <ColumnMultiselect
           columns={columns}
-          onColumnsSelect={(selected) => {
+          onColumnsSelect={React.useCallback((selected) => {
             onColumnsFilter(selected);
-          }}
+          }, [])}
         />
       </div>
     </div>
