@@ -81,9 +81,6 @@ function DOTSAnalysisTool() {
               'Domain',
               'Spend',
               'Revenue',
-              'Uniques',
-              'Link Click',
-              'Ad Click',
               'ROI',
               'Margin',
               'CTR',
@@ -94,6 +91,9 @@ function DOTSAnalysisTool() {
               'CPLC',
               'RPU',
               'CPU',
+              'Link Clicks',
+              'Ad Clicks',
+              'Uniques',
             ]}
           />
           <Visual data={parsedReport.data} />

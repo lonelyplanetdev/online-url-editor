@@ -120,13 +120,13 @@ const columns: Column[] = [
       if (row['ad_click'] === 0) {
         return 'N/A'; // Or return an appropriate message or value when ad_click is zero
       }
-      return `${((row['link_click'] / row['ad_click']) * 100).toFixed(2)}%`;
+      return `${((row['ad_click'] / row['link_click']) * 100).toFixed(2)}%`;
     },
     footerClassName: () => 'text-right',
     footerAccessor: (row) => {
-      row['ad_click'] === 0 ? 'N/A' : `${((row['link_click'] / row['ad_click']) * 100).toFixed(2)}%`;
+      row['ad_click'] === 0 ? 'N/A' : `${((row['ad_click'] / row['link_click']) * 100).toFixed(2)}%`;
 
-      return `${((row['link_click'] / row['ad_click']) * 100).toFixed(2)}%`;
+      return `${((row['ad_click'] / row['link_click']) * 100).toFixed(2)}%`;
     },
   },
   {
@@ -135,13 +135,13 @@ const columns: Column[] = [
       if (row['uniques'] === 0) {
         return 'N/A'; // Or return an appropriate message or value when uniques is zero
       }
-      return `$${((row['revenue'] / row['uniques']) * 1000).toFixed(2)}`;
+      return `$${((row['revenue'] / row['ad_click']) * 1000 * (row['ad_click'] / row['link_click'])).toFixed(2)}`;
     },
     footerClassName: () => 'text-right',
     footerAccessor: (row) => {
-      row['uniques'] === 0 ? 'N/A' : `$${((row['revenue'] / row['uniques']) * 1000).toFixed(2)}`;
+      row['uniques'] === 0 ? 'N/A' : `$${(row['revenue'] / row['ad_click']) * 1000}`;
 
-      return `$${((row['revenue'] / row['uniques']) * 1000).toFixed(2)}`;
+      return `$${((row['revenue'] / row['ad_click']) * 1000).toFixed(2)}`;
     },
   },
   {
