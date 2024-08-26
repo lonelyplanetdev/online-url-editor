@@ -114,7 +114,36 @@ const columns: Column[] = [
       return `${((row['revenue'] / row['spend'] - 1) * 100).toFixed(2)}%`;
     },
   },
-  // Revenue per Ad Click Cost per Ad Click Revenue per Link Click Cost per Link Click Revenue per Unique Cost per Unique (RPAC, CPAC, RPLC, CPLC, RPU, CPU)
+  {
+    header: 'CTR',
+    cellAccessor: (row) => {
+      if (row['ad_click'] === 0) {
+        return 'N/A'; // Or return an appropriate message or value when ad_click is zero
+      }
+      return `${((row['link_click'] / row['ad_click']) * 100).toFixed(2)}%`;
+    },
+    footerClassName: () => 'text-right',
+    footerAccessor: (row) => {
+      row['ad_click'] === 0 ? 'N/A' : `${((row['link_click'] / row['ad_click']) * 100).toFixed(2)}%`;
+
+      return `${((row['link_click'] / row['ad_click']) * 100).toFixed(2)}%`;
+    },
+  },
+  {
+    header: 'RPM',
+    cellAccessor: (row) => {
+      if (row['uniques'] === 0) {
+        return 'N/A'; // Or return an appropriate message or value when uniques is zero
+      }
+      return `$${((row['revenue'] / row['uniques']) * 1000).toFixed(2)}`;
+    },
+    footerClassName: () => 'text-right',
+    footerAccessor: (row) => {
+      row['uniques'] === 0 ? 'N/A' : `$${((row['revenue'] / row['uniques']) * 1000).toFixed(2)}`;
+
+      return `$${((row['revenue'] / row['uniques']) * 1000).toFixed(2)}`;
+    },
+  },
   {
     header: 'RPAC',
     cellAccessor: (row) => {

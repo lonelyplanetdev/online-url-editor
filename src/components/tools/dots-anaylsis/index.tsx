@@ -86,6 +86,8 @@ function DOTSAnalysisTool() {
               'Ad Click',
               'ROI',
               'Margin',
+              'CTR',
+              'RPM',
               'RPAC',
               'CPAC',
               'RPLC',
