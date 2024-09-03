@@ -47,7 +47,7 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
               },
               {
                 name: 'Newsbreak Launcher',
-                href: '/tools/newsbreak-launcher',
+                href: 'https://nwb.ptlinternaltools.com/',
                 external: true,
                 disabled: false,
               },

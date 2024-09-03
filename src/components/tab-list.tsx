@@ -8,7 +8,7 @@ import { ExternalLink } from 'lucide-react';
 
 const NameComp = ({ name, external }: { name: string; external?: boolean }) => {
   return (
-    <span className="flex flex-row items-center justify-between">
+    <span className="flex w-full flex-row items-center justify-between">
       {name}
       {external && <ExternalLink size={16} />}
     </span>
