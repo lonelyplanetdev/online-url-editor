@@ -4,12 +4,18 @@ import Link from 'next/link';
 import { Button } from './ui/button';
 import { usePathname } from 'next/navigation';
 import { cn } from '~/lib/utils';
+import { ExternalLink } from 'lucide-react';
 
-function TabList({
-  tabs,
-}: {
-  tabs: { name: string; href: string; disabled: boolean }[];
-}) {
+const NameComp = ({ name, external }: { name: string; external?: boolean }) => {
+  return (
+    <span className="flex flex-row items-center justify-between">
+      {name}
+      {external && <ExternalLink size={16} />}
+    </span>
+  );
+};
+
+function TabList({ tabs }: { tabs: { name: string; href: string; disabled: boolean; external?: boolean }[] }) {
   const pathName = usePathname();
   const isActive = (href: string) => {
     return pathName === href;
@@ -29,9 +35,17 @@ function TabList({
       disabled={tab.disabled}
     >
       {tab.disabled ? (
-        <span>{tab.name}</span>
+        <NameComp
+          name={tab.name}
+          external={tab.external}
+        />
       ) : (
-        <Link href={tab.href}>{tab.name}</Link>
+        <Link href={tab.href}>
+          <NameComp
+            name={tab.name}
+            external={tab.external}
+          />
+        </Link>
       )}
     </Button>
   ));

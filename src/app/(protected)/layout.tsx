@@ -45,6 +45,12 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
                 href: '/tools/dots-analysis',
                 disabled: false,
               },
+              {
+                name: 'Newsbreak Launcher',
+                href: '/tools/newsbreak-launcher',
+                external: true,
+                disabled: false,
+              },
             ]}
           />
         </div>
