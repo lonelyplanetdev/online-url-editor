@@ -23,12 +23,9 @@ function TemplateSelect({
   templates: URLBuilderTemplate[];
   onTemplateChange?: (templateId: string | null) => void;
 }) {
-  const [selectedTemplate, setSelectedTemplate] = React.useState<
-    string | null
-  >();
+  const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>();
 
   function handleTemplateChange(templateId: string | null) {
-    console.log('handleTemplateChange', templateId);
     setSelectedTemplate(templateId);
     onTemplateChange?.(templateId);
   }
@@ -42,9 +39,7 @@ function TemplateSelect({
             variant="outline"
             className="w-96 justify-between"
           >
-            {selectedTemplate
-              ? templates.find((t) => t.id === selectedTemplate)?.name
-              : 'Select a template'}
+            {selectedTemplate ? templates.find((t) => t.id === selectedTemplate)?.name : 'Select a template'}
             <ChevronsUpDown className="size-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -56,11 +51,7 @@ function TemplateSelect({
             <DropdownMenuItem
               key={template.id}
               className="flex justify-between"
-              onClick={() =>
-                handleTemplateChange(
-                  selectedTemplate !== template.id ? template.id : null,
-                )
-              }
+              onClick={() => handleTemplateChange(selectedTemplate !== template.id ? template.id : null)}
             >
               <span>{template.name}</span>
               {selectedTemplate === template.id && <Check className="size-4" />}

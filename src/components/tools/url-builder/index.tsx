@@ -1,123 +1,197 @@
 'use client';
 
 import * as React from 'react';
-import type { URLBuilderTemplate, URLBuilderTemplateField } from './util';
+import type { URLBuilderTemplate, URLBuilderTemplateField, URLBuilderTemplateFieldOption } from '@prisma/client';
 
 import { Label } from '~/components/ui/label';
-import { URLBox } from './url-box';
-import { TemplateSelect } from './template-select';
-import { ParametersList } from './paramaters-list';
-import { OutputBox } from './output-box';
 import { Actions } from './actions';
+import { TemplateSelect } from './template-select';
+import { OutputBox } from './output-box';
+import { URLBox } from './url-box';
+import ParameterEditor from './parameter-editor';
 
 interface URLBuilderToolProps {
-  templates: URLBuilderTemplate[];
+  templates: (URLBuilderTemplate & {
+    fields: (URLBuilderTemplateField & { selectOptions: URLBuilderTemplateFieldOption[] })[];
+  })[];
 }
 export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>();
-  const [fields, setFields] = React.useState<URLBuilderTemplateField[]>([]);
+  const templateQueryParams = React.useMemo(() => {
+    return (
+      templates.find((template) => template.id === selectedTemplate)?.fields.filter((field) => !field.inPath) || []
+    );
+  }, [templates, selectedTemplate]);
 
-  const [url, setUrl] = React.useState<string | null>(null);
-  const [params, setParams] = React.useState<string[]>([]);
+  const templatePathParams = React.useMemo(() => {
+    return templates.find((template) => template.id === selectedTemplate)?.fields.filter((field) => field.inPath) || [];
+  }, [templates, selectedTemplate]);
+
+  const templateDefaultUrl = React.useMemo(() => {
+    return templates.find((template) => template.id === selectedTemplate)?.defaultUrl;
+  }, [templates, selectedTemplate]);
+
+  const [templateUrl, setTemplateUrl] = React.useState<string>('');
+  const [pathParams, setPathParams] = React.useState<Record<string, string>>(
+    templatePathParams.reduce((acc, field) => {
+      return {
+        ...acc,
+        [field.key]: field.selectOptions.length && field.type === 'SELECT' ? field.selectOptions[0].value : '',
+      };
+    }, {}),
+  );
+  const [queryParams, setQueryParams] = React.useState<Record<string, string>>(
+    templateQueryParams.reduce((acc, field) => {
+      return {
+        ...acc,
+        [field.key]: field.selectOptions.length && field.type === 'SELECT' ? field.selectOptions[0].value : '',
+      };
+    }, {}),
+  );
   const [output, setOutput] = React.useState<string>('');
 
-  function handleManualURLChange(url: string) {
-    setUrl(url);
-
-    if (url !== '') setOutput(generateUrl(url, params));
-  }
-
-  function handleTemplateChange(templateId: string | null) {
-    setSelectedTemplate(templateId);
-
-    const exisitngParams = getExisitngParams(url || '');
-    let templateFields = templates.find((t) => t.id === templateId)?.fields || [];
-
-    templateFields = templateFields.map((field) => {
-      if (!field.hidden && exisitngParams[field.key]) field.defaultValue = exisitngParams[field.key];
-
-      return field;
-    });
-
-    setFields(templateFields);
-    setParams([]);
-
-    setOutput(generateUrl(url || '', []));
-  }
-
-  const handleParametersChange = React.useCallback(
-    (params: string[]) => {
-      setParams(params);
-      setOutput(generateUrl(url || '', params));
+  const handleTemplateChange = React.useCallback(
+    (templateId: string | null) => {
+      setTemplateUrl(templates.find((template) => template.id === templateId)?.defaultUrl || '');
+      setPathParams({});
+      setQueryParams({});
+      setOutput('');
+      setSelectedTemplate(templateId);
     },
-    [url],
+    [templates],
   );
 
-  function getExisitngParams(url: string): Record<string, string> {
-    try {
-      const urlInstance = new URL(url);
-      const searchParams = new URLSearchParams(urlInstance.search);
-      const existingParams: Record<string, string> = {};
+  const handleValidUrlChange = React.useCallback(
+    (url: string) => {
+      setTemplateUrl(url);
+    },
+    [setTemplateUrl],
+  );
 
-      searchParams.forEach((value, key) => {
-        existingParams[key] = value;
-      });
+  const handleQueryParamChange = React.useCallback(
+    (params: Record<string, string>) => {
+      setQueryParams(params);
+    },
+    [setQueryParams],
+  );
 
-      console.log('getExisitngParams', existingParams);
+  const handlePathParamChange = React.useCallback(
+    (params: Record<string, string>) => {
+      setPathParams(params);
+    },
+    [setPathParams],
+  );
 
-      return existingParams;
-    } catch (error) {
-      return {};
+  const generateQueryParamString = React.useCallback((params: Record<string, string>) => {
+    return Object.entries(params)
+      .filter(([key, value]) => value !== '')
+      .map(([key, value]) => {
+        return `${key}=${value}`;
+      })
+      .join('&');
+  }, []);
+
+  const getTemplateUrlExisitingParams = React.useCallback(() => {
+    const url = (() => {
+      try {
+        return new URL(templateUrl);
+      } catch (error) {
+        return null;
+      }
+    })();
+
+    if (!url) return {};
+
+    const searchParams = new URLSearchParams(url.search);
+    const params: Record<string, string> = Object.fromEntries(searchParams.entries());
+
+    return params;
+  }, [templateUrl]);
+
+  function zipParams(lowPriority: Record<string, string>, highPriority: Record<string, string>) {
+    const zippedParams = { ...lowPriority };
+
+    for (const key of Object.keys(highPriority)) {
+      zippedParams[key] = highPriority[key];
     }
+
+    return zippedParams;
   }
 
-  function generateUrl(url: string, params: string[]) {
-    try {
-      const urlInstance = new URL(url);
-      const paramKeys = params.map((param) => param.split('=')[0]);
+  // useEffect to update output when pathParams or queryParams change
+  React.useEffect(() => {
+    if (!selectedTemplate) return;
 
-      const searchParams = new URLSearchParams(urlInstance.search);
+    const replacedUrl = templateUrl.replace(/\[(.*?)\]/g, (match, key) => {
+      if (pathParams[key]) return pathParams[key];
+      return match;
+    });
 
-      const newSearchParams = new URLSearchParams();
+    const url = (() => {
+      try {
+        return new URL(replacedUrl);
+      } catch (error) {
+        return null;
+      }
+    })();
 
-      searchParams.forEach((_, key) => {
-        if (!paramKeys.includes(key)) newSearchParams.append(key, searchParams.get(key)!);
-      });
+    if (!url) return;
 
-      urlInstance.search = newSearchParams.toString();
+    const existingParams = getTemplateUrlExisitingParams();
+    const zippedParams = zipParams(queryParams, existingParams);
 
-      const prefix = newSearchParams.toString() ? '&' : '?';
-      const outputHref = urlInstance.href;
-      const final = outputHref + (params.length ? `${prefix}${params.join('&')}` : '');
-      return final;
-    } catch (error) {
-      return '';
-    }
-  }
+    const searchParams = generateQueryParamString(zippedParams);
+
+    // remove existing query params
+    url.search = '';
+
+    setOutput(`${url.href}${searchParams ? `?${searchParams}` : ''}`);
+  }, [
+    generateQueryParamString,
+    getTemplateUrlExisitingParams,
+    pathParams,
+    queryParams,
+    selectedTemplate,
+    templatePathParams,
+    templateQueryParams,
+    templateUrl,
+  ]);
 
   return (
     <div className="grid gap-8">
-      <URLBox
-        url={url || ''}
-        onValidChange={handleManualURLChange}
-      />
       <TemplateSelect
         templates={templates}
         onTemplateChange={handleTemplateChange}
       />
-
-      {selectedTemplate && (
-        <div className="grid gap-1.5">
-          <Label>Parameters</Label>
-          <ParametersList
-            fields={fields}
-            onChange={handleParametersChange}
-          />
-        </div>
+      {selectedTemplate && !templateDefaultUrl && (
+        <URLBox
+          url={templateUrl}
+          onValidChange={handleValidUrlChange}
+          onEmpty={() => setOutput('')}
+        />
       )}
-
-      <OutputBox output={output} />
-      <Actions output={output} />
+      {selectedTemplate && (
+        <>
+          <div className="grid gap-1.5">
+            <Label>Path Parameters</Label>
+            <ParameterEditor
+              fields={templatePathParams}
+              defaultValues={pathParams}
+              onChange={handlePathParamChange}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Query Parameters</Label>
+            <ParameterEditor
+              fields={templateQueryParams}
+              defaultValues={queryParams}
+              onChange={handleQueryParamChange}
+            />
+          </div>
+          <OutputBox output={output} />
+          <Actions output={output} />
+        </>
+      )}
     </div>
   );
 }

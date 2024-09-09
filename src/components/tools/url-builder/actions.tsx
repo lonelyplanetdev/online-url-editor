@@ -1,19 +1,15 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
-import { cn } from '~/lib/utils';
 
 interface ActionsProps {
   output?: string;
 }
 export function Actions({ output }: ActionsProps) {
-  const [copyFullButtonLabel, setCopyFullButtonLabel] =
-    useState('Copy Full URL');
-  const [copyDomainButtonLabel, setCopyDomainButtonLabel] =
-    useState('Copy Domain Only');
+  const [copyFullButtonLabel, setCopyFullButtonLabel] = useState('Copy Full URL');
+  const [copyDomainButtonLabel, setCopyDomainButtonLabel] = useState('Copy Domain Only');
 
   return (
     <div>
@@ -41,13 +37,13 @@ export function Actions({ output }: ActionsProps) {
             disabled={!output}
             asChild={!!output}
           >
-            <Link
+            <a
               href={output || ''}
               target="_blank"
               rel="noopener noreferrer"
             >
               Preview URL
-            </Link>
+            </a>
           </Button>
           <Button
             variant="outline"

@@ -2,13 +2,8 @@ import { redirect } from 'next/navigation';
 import { validateRequest } from '~/lib/auth';
 import { db } from '~/lib/db';
 import { URLBuilderTool } from '~/components/tools/url-builder';
-import { URLBuilderTemplate } from '~/components/tools/url-builder/util';
-import {
-  PageContent,
-  PageDescription,
-  PageHeader,
-  PageTitle,
-} from '~/components/page-details';
+import { URLBuilderTemplate, URLBuilderTemplateField, URLBuilderTemplateFieldOption } from '@prisma/client';
+import { PageContent, PageDescription, PageHeader, PageTitle } from '~/components/page-details';
 
 export default async function ToolURLBuilderPage() {
   const authed = await validateRequest();
@@ -17,22 +12,16 @@ export default async function ToolURLBuilderPage() {
   const userUrlBuilderTemplates = (await db.uRLBuilderTemplate
     .findMany({
       orderBy: [{ name: 'asc' }],
-      select: {
-        id: true,
-        name: true,
+      include: {
         fields: {
           orderBy: [{ type: 'asc' }, { key: 'asc' }],
-          select: {
-            key: true,
-            type: true,
-            defaultValue: true,
-            hidden: true,
-            encoded: true,
-          },
+          include: { selectOptions: { orderBy: [{ value: 'asc' }] } },
         },
       },
     })
-    .catch(() => [])) as URLBuilderTemplate[];
+    .catch(() => [])) as (URLBuilderTemplate & {
+    fields: (URLBuilderTemplateField & { selectOptions: URLBuilderTemplateFieldOption[] })[];
+  })[];
 
   return (
     <>

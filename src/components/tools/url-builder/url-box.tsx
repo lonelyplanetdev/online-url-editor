@@ -7,30 +7,42 @@ import { Textarea } from '~/components/ui/textarea';
 interface URLBoxProps {
   url?: string;
   onValidChange?: (value: string) => void;
+  onChange?: (value: string) => void; // New prop for onChange
+  onEmpty?: () => void;
 }
-export function URLBox({ url, onValidChange }: URLBoxProps) {
+
+export function URLBox({ url, onValidChange, onChange, onEmpty }: URLBoxProps) {
   const [value, setValue] = React.useState(url || '');
   const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    setValue(url || '');
+    onValidChange?.(url || '');
+  }, [url, onValidChange]);
 
   function handleChange(value: string) {
     if (!value) {
       setError(null);
       setValue(value);
+      onChange?.(value); // Call onChange when input is cleared
+      onEmpty?.();
       return onValidChange?.(value);
     }
 
     try {
       const urlInstance = new URL(value);
-      if (urlInstance.protocol !== 'http:' && urlInstance.protocol !== 'https:')
-        throw new Error();
+      if (urlInstance.protocol !== 'http:' && urlInstance.protocol !== 'https:') throw new Error();
       setError(null);
       setValue(value);
     } catch (error) {
       setError('Invalid URL. Please make sure the URL is valid and try again.');
-      return setValue(value);
+      setValue(value);
+      onChange?.(value); // Always call onChange even with invalid URL
+      return;
     }
 
-    onValidChange?.(value);
+    onChange?.(value); // Call onChange with valid URL
+    onValidChange?.(value); // Call onValidChange when valid
   }
 
   return (
