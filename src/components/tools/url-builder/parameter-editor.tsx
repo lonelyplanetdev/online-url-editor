@@ -108,7 +108,9 @@ function ParameterRow({ param_key: key, type, value, encoded, options, onChange 
               .replace(/\n/g, ',')
               .replace(/,{2,}/g, ',')
               .replace(/,$/, '')
-              .replace(/^,/, '');
+              .replace(/^,/, '')
+              .replace(/^"/, '')
+              .replace(/"$/, '');
 
             onChange(key, parsed, encoded);
           }}
