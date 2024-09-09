@@ -138,7 +138,7 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     if (!url) return;
 
     const existingParams = getTemplateUrlExisitingParams();
-    const zippedParams = zipParams(queryParams, existingParams);
+    const zippedParams = zipParams(existingParams, queryParams);
 
     const searchParams = generateQueryParamString(zippedParams);
 
