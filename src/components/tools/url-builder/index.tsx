@@ -88,7 +88,6 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
       .map(([key, value]) => {
         const isNumbered = key.toLowerCase().includes('[number]');
         const maxNumber = 10;
-        console.log(isNumbered);
 
         if (isNumbered) {
           // split the value by comma
