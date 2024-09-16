@@ -13,6 +13,8 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import { ScrollArea } from '~/components/ui/scroll-area';
+import { cn } from '~/lib/utils';
 
 interface ParametersListProps {
   ignoreEncoding?: boolean;
@@ -116,13 +118,13 @@ function ParameterRow({ param_key: key, type, value, encoded, options, onChange 
           }}
         />
       ) : type === 'SELECT' ? (
-        <DropdownMenu>
+        <DropdownMenu modal={true}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
               className="w-full justify-between"
             >
-              {selected || value || 'Select an option'}
+              {getLabel(options || [], selected || value) || 'Select an option'}
               <ChevronsUpDown className="size-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -130,19 +132,21 @@ function ParameterRow({ param_key: key, type, value, encoded, options, onChange 
             className="w-96"
             align="start"
           >
-            {options?.map((option) => (
-              <DropdownMenuItem
-                key={option.value}
-                className="flex justify-between"
-                onClick={() => {
-                  setSelected(option.value);
-                  onChange(key, option.value, encoded);
-                }}
-              >
-                <span>{option.value}</span>
-                {value === option.value && <Check className="size-4" />}
-              </DropdownMenuItem>
-            ))}
+            <ScrollArea className={cn(options && options.length > 6 && 'h-48')}>
+              {options?.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  className="flex justify-between"
+                  onClick={() => {
+                    setSelected(option.value);
+                    onChange(key, option.value, encoded);
+                  }}
+                >
+                  <span>{option.label || option.value}</span>
+                  {value === option.value && <Check className="size-4" />}
+                </DropdownMenuItem>
+              ))}
+            </ScrollArea>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
@@ -154,4 +158,8 @@ function ParameterRow({ param_key: key, type, value, encoded, options, onChange 
       )}
     </div>
   );
+  function getLabel(options: URLBuilderTemplateFieldOption[], value: string) {
+    const foundOption = options?.find((option) => option.value === value) || null;
+    return foundOption?.label || value;
+  }
 }
