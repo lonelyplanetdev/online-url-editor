@@ -64,6 +64,7 @@ model URLBuilderTemplateFieldOption {
   key        String
   templateId String
   value      String
+  label      String?
 
   field URLBuilderTemplateField @relation(references: [templateId, key], fields: [templateId, key], onDelete: Cascade)
 
