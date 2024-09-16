@@ -84,8 +84,21 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
 
   const generateQueryParamString = React.useCallback((params: Record<string, string>) => {
     return Object.entries(params)
-      .filter(([key, value]) => value !== '')
+      .filter(([_, value]) => value !== '')
       .map(([key, value]) => {
+        const isNumbered = key.toLowerCase().includes('[number]');
+        const maxNumber = 10;
+        console.log(isNumbered);
+
+        if (isNumbered) {
+          // split the value by comma
+          const values = value.replaceAll('%2C', ',').split(',').filter(Boolean).slice(0, maxNumber);
+          return values
+            .map((val, idx) => {
+              return `${key.replace(/\[number\]/gi, String(idx + 1))}=${val}`;
+            })
+            .join('&');
+        }
         return `${key}=${value}`;
       })
       .join('&');
