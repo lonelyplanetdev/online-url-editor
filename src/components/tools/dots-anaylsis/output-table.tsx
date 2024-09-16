@@ -5,6 +5,7 @@ import type { ReportDataRow } from '.';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter } from '~/components/ui/table';
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
+import { ScrollArea, ScrollBar } from '~/components/ui/scroll-area';
 
 type Column = {
   header: string;
@@ -32,6 +33,8 @@ const columns: Column[] = [
     header: 'Date',
     cellAccessor: (row) => row['date'],
     cellClassName: () => 'min-w-28',
+    footerAccessor: (row) => 'Total Row',
+    footerClassName: () => 'text-left font-bold',
   },
   {
     header: 'Campaign',
@@ -75,13 +78,13 @@ const columns: Column[] = [
   },
   {
     header: 'Spend',
-    cellAccessor: (row) => `$${row['spend']}`,
+    cellAccessor: (row) => `$${row['spend'].toFixed(2)}`,
     footerClassName: () => 'text-right',
     footerAccessor: (row) => `$${row['spend'].toFixed(2)}`,
   },
   {
     header: 'Revenue',
-    cellAccessor: (row) => `$${row['revenue']}`,
+    cellAccessor: (row) => `$${row['revenue'].toFixed(2)}`,
     footerClassName: () => 'text-right',
     footerAccessor: (row) => `$${row['revenue'].toFixed(2)}`,
   },
@@ -270,29 +273,28 @@ function OutputTable({ data, shownColumns }: OutputTableProps) {
   );
 
   return data && data.length > 0 ? (
-    <div className="h-full overflow-x-auto overflow-y-auto rounded-md border">
-      <Table className="h-full">
-        <OutputTableHeader shownColumns={shownColumns} />
-        {/* every second row is coloured using odd*/}
+    <ScrollArea
+      type="always"
+      className="rounded-md border"
+    >
+      <Table>
+        <OutputTableFooter
+          data={data}
+          shownColumns={shownColumns}
+        />
         <TableBody>
-          {/* <TableCell className={cn('line-clamp-1 h-8 py-2')}>
-
-            </TableCell> */}
           {Object.keys(groupedByCampaignRows).map((campaign, index) => (
             <OutputTableBodyRow
-              key={index}
+              key={campaign + index}
               name={campaign}
               rows={groupedByCampaignRows[campaign]}
               shownColumns={shownColumns}
             />
           ))}
         </TableBody>
-        <OutputTableFooter
-          data={data}
-          shownColumns={shownColumns}
-        />
       </Table>
-    </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   ) : (
     <div className="flex h-60 items-center justify-center rounded-md border">
       <p className="text-sm text-muted-foreground">No Data to Display</p>
@@ -329,7 +331,7 @@ function OutputTableBodyRow({
 
   return (
     <>
-      <TableRow className="bg-primary-foreground">
+      <TableRow className="bg-primary-foreground/50">
         {columns
           .filter((column) => ['Date', 'Campaign', ...shownColumns].includes(column.header))
           .map((column, index) =>
@@ -416,20 +418,32 @@ function OutputTableFooter({ data, shownColumns }: { data: ReportDataRow[]; show
   );
 
   return (
-    <TableFooter className="sticky bottom-0 bg-primary-foreground">
-      <TableRow>
+    <TableHeader className="sticky top-0 bg-primary-foreground">
+      <TableRow className="!border-b-0 text-xs">
         {columns
           .filter((column) => ['Date', 'Campaign', ...shownColumns].includes(column.header))
           .map((column, index) => (
             <TableCell
               key={index}
-              className={cn(column.footerClassName)}
+              className={cn('!border-b-0 py-1', column.footerClassName)}
             >
               {column.footerAccessor && column.footerAccessor(row as unknown as ReportDataRow)}
             </TableCell>
           ))}
       </TableRow>
-    </TableFooter>
+      <TableRow>
+        {columns
+          .filter((column) => ['Date', 'Campaign', ...shownColumns].includes(column.header))
+          .map((column, index) => (
+            <TableHead
+              key={index}
+              className={cn(column.headerClassName)}
+            >
+              {column.header}
+            </TableHead>
+          ))}
+      </TableRow>
+    </TableHeader>
   );
 }
 

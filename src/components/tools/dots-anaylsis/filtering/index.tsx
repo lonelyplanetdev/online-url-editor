@@ -36,9 +36,9 @@ function Filtering({ onSearchName, onDateRange, onMangersFilter, onColumnsFilter
 
   return (
     <div className="grid">
-      <div className="flex flex-col gap-2 xl:flex-row">
+      <div className="flex flex-col gap-2 lg:flex-row">
         <DateRangePicker
-          className="w-full grow xl:basis-1/4"
+          className="w-full grow lg:basis-1/4"
           onRangeSelect={React.useCallback((range: any) => {
             setDateRange(range);
           }, [])}
@@ -48,7 +48,7 @@ function Filtering({ onSearchName, onDateRange, onMangersFilter, onColumnsFilter
           placeholder="Search by name"
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
-          className="w-full grow xl:basis-1/4"
+          className="w-full grow lg:basis-1/4"
         />
         <ManagerMultiselect
           managers={managers}

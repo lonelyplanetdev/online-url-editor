@@ -12,7 +12,6 @@ export function Exclusions({ onExclusionsChange }: ExclusionsProps) {
   const [textareaValue, setTextareaValue] = useState<string>('');
 
   useEffect(() => {
-    console.log('exclusionsList.current', exclusionsList.current);
     exclusionsList.current = textareaValue
       .split('\n')
       .map((exclusion) => exclusion.trim())

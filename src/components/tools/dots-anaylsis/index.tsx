@@ -61,13 +61,11 @@ function DOTSAnalysisTool() {
     };
   }, [report, searchName, dateRange, managers]);
 
-  console.log(parsedReport.managers);
-
   return (
     <div className="grid gap-8">
       <ReportUpload onDOTSData={(data) => setReport(data)} />
       {report ? (
-        <div className="grid h-[calc(100vh-20rem)] grid-cols-1 grid-rows-[10rem_auto_auto] gap-8 xl:grid-cols-[24rem_auto] xl:grid-rows-[2.5rem_auto]">
+        <div className="grid h-[calc(100vh-20rem)] grid-cols-1 grid-rows-[10rem_auto_auto] gap-8 lg:grid-rows-[2.5rem_auto]">
           <Filtering
             onDateRange={(range) => range && setDateRange(range)}
             onSearchName={(name) => setSearchName(name)}
@@ -96,14 +94,16 @@ function DOTSAnalysisTool() {
               'Uniques',
             ]}
           />
-          <Visual data={parsedReport.data} />
+          {/* <Visual data={parsedReport.data} /> */}
           <OutputTable
             data={parsedReport.data}
             shownColumns={columns}
           />
         </div>
       ) : (
-        'nodatat'
+        <div className="flex h-60 items-center justify-center rounded-md border">
+          <p className="text-sm text-muted-foreground">No report uploaded</p>
+        </div>
       )}
     </div>
   );
