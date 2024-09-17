@@ -17,7 +17,6 @@ type ReportDataRow = {
 };
 
 import { ReportUpload } from './report-upload';
-import { Visual } from './visual';
 import { Filtering } from './filtering';
 import { OutputTable } from './output-table';
 import { addDays } from 'date-fns';
