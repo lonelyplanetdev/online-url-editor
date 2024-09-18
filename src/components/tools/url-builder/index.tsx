@@ -69,6 +69,7 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     (templateId: string | null) => {
       setTemplateUrl(templates.find((template) => template.id === templateId)?.defaultUrl || '');
       setPathParams({});
+      setQueryParams({});
       setOutput('');
       setSelectedTemplate(templateId);
     },
