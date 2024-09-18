@@ -45,6 +45,17 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
                 href: '/tools/dots-analysis',
                 disabled: false,
               },
+              // {
+              //   name: 'NWB DA Analysis',
+              //   href: '/tools/nwb-da-analysis',
+              //   disabled: false,
+              // },
+              {
+                name: 'DCS Content Manager',
+                href: 'https://cms.ptlinternaltools.com/',
+                external: true,
+                disabled: false,
+              },
               {
                 name: 'Newsbreak Launcher',
                 href: 'https://nwb.ptlinternaltools.com/',

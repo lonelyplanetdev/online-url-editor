@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { DateRange as ToolDateRange } from '../';
+import type { DateRange as ToolDateRange } from '..';
 import { Label } from '~/components/ui/label';
 import { DateRangePicker } from './date-range';
 import { Input } from '~/components/ui/input';

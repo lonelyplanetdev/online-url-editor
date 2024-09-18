@@ -1,4 +1,4 @@
-import { DOTSAnalysisTool } from '~/components/tools/dots-anaylsis';
+import { DOTSAnalysisTool } from '~/components/tools/dots-analysis';
 
 import { PageContent, PageDescription, PageHeader, PageTitle } from '~/components/page-details';
 

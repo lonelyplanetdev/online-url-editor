@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import type { ReportDataRow } from '../';
+import type { ReportDataRow } from '..';
 
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '~/components/ui/table';
 import { ScrollArea } from '~/components/ui/scroll-area';
