@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Asterisk, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { ScrollArea } from '~/components/ui/scroll-area';
 import { cn } from '~/lib/utils';
@@ -65,6 +65,7 @@ export default function ParameterEditor({ ignoreEncoding, fields, defaultValues,
             key={field.key}
             type={field.type}
             param_key={field.key}
+            optional={field.optional}
             value={params[field.key]}
             encoded={field.encoded && !ignoreEncoding}
             options={field.selectOptions}
@@ -85,21 +86,34 @@ export default function ParameterEditor({ ignoreEncoding, fields, defaultValues,
 interface ParameterRowProps {
   param_key: string;
   type: string;
+  optional: boolean;
   value: string;
   encoded: boolean;
   options?: URLBuilderTemplateFieldOption[];
   onChange: (key: string, value: string, encoded: boolean) => void;
 }
-function ParameterRow({ param_key: key, type, value, encoded, options, onChange }: ParameterRowProps) {
+function ParameterRow({ param_key: key, type, optional, value, encoded, options, onChange }: ParameterRowProps) {
   const [selected, setSelected] = React.useState<string | null>(null);
 
   return (
     <div className="flex gap-2">
-      <Input
-        readOnly
-        defaultValue={key}
-        className="h-full w-48"
-      />
+      <div
+        className={cn(
+          'text-bold relative flex h-full w-32 items-center rounded-md border px-3 text-sm',
+          !optional ? 'bg-destructive/25' : 'bg-primary-foreground',
+        )}
+      >
+        {key}
+        {!optional && (
+          <div
+            className="absolute right-0 ml-1 text-destructive"
+            title="Manadatory Field"
+          >
+            <Asterisk size={20} />
+          </div>
+        )}
+      </div>
+
       {type === 'LIST' ? (
         <Textarea
           defaultValue={value}

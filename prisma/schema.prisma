@@ -51,7 +51,7 @@ model URLBuilderTemplateField {
   type         URLBuilderTemplateFieldType
   defaultValue String                      @default("")
   hidden       Boolean                     @default(false)
-  header       String?
+  optional     Boolean                     @default(false)
   encoded      Boolean                     @default(true)
   inPath       Boolean                     @default(false)
 

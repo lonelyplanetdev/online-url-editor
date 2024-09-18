@@ -19,12 +19,28 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>();
   const templateQueryParams = React.useMemo(() => {
     return (
-      templates.find((template) => template.id === selectedTemplate)?.fields.filter((field) => !field.inPath) || []
+      templates
+        .find((template) => template.id === selectedTemplate)
+        ?.fields.filter((field) => !field.inPath)
+        .sort((a, b) => {
+          if (a.optional && !b.optional) return 1;
+          if (!a.optional && b.optional) return -1;
+          return 0;
+        }) || []
     );
   }, [templates, selectedTemplate]);
 
   const templatePathParams = React.useMemo(() => {
-    return templates.find((template) => template.id === selectedTemplate)?.fields.filter((field) => field.inPath) || [];
+    return (
+      templates
+        .find((template) => template.id === selectedTemplate)
+        ?.fields.filter((field) => field.inPath)
+        .sort((a, b) => {
+          if (a.optional && !b.optional) return 1;
+          if (!a.optional && b.optional) return -1;
+          return 0;
+        }) || []
+    );
   }, [templates, selectedTemplate]);
 
   const templateDefaultUrl = React.useMemo(() => {
@@ -32,29 +48,27 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   }, [templates, selectedTemplate]);
 
   const [templateUrl, setTemplateUrl] = React.useState<string>('');
-  const [pathParams, setPathParams] = React.useState<Record<string, string>>(
-    templatePathParams.reduce((acc, field) => {
-      return {
-        ...acc,
-        [field.key]: field.selectOptions.length && field.type === 'SELECT' ? field.selectOptions[0].value : '',
-      };
-    }, {}),
-  );
   const [queryParams, setQueryParams] = React.useState<Record<string, string>>(
     templateQueryParams.reduce((acc, field) => {
       return {
         ...acc,
-        [field.key]: field.selectOptions.length && field.type === 'SELECT' ? field.selectOptions[0].value : '',
       };
     }, {}),
   );
+  const [pathParams, setPathParams] = React.useState<Record<string, string>>(
+    templatePathParams.reduce((acc, field) => {
+      return {
+        ...acc,
+      };
+    }, {}),
+  );
+
   const [output, setOutput] = React.useState<string>('');
 
   const handleTemplateChange = React.useCallback(
     (templateId: string | null) => {
       setTemplateUrl(templates.find((template) => template.id === templateId)?.defaultUrl || '');
       setPathParams({});
-      setQueryParams({});
       setOutput('');
       setSelectedTemplate(templateId);
     },
@@ -66,20 +80,6 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
       setTemplateUrl(url);
     },
     [setTemplateUrl],
-  );
-
-  const handleQueryParamChange = React.useCallback(
-    (params: Record<string, string>) => {
-      setQueryParams(params);
-    },
-    [setQueryParams],
-  );
-
-  const handlePathParamChange = React.useCallback(
-    (params: Record<string, string>) => {
-      setPathParams(params);
-    },
-    [setPathParams],
   );
 
   const generateQueryParamString = React.useCallback((params: Record<string, string>) => {
@@ -130,7 +130,6 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     return zippedParams;
   }
 
-  // useEffect to update output when pathParams or queryParams change
   React.useEffect(() => {
     if (!selectedTemplate) return;
 
@@ -150,6 +149,7 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     if (!url) return;
 
     const existingParams = getTemplateUrlExisitingParams();
+
     const zippedParams = zipParams(existingParams, queryParams);
 
     const searchParams = generateQueryParamString(zippedParams);
@@ -169,6 +169,16 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     templateUrl,
   ]);
 
+  const validURL = React.useMemo(() => {
+    try {
+      if (!templateUrl || !output) return false;
+      const urlInstance = new URL(templateUrl);
+      return urlInstance.protocol === 'http:' || urlInstance.protocol === 'https:';
+    } catch (error) {
+      return false;
+    }
+  }, [templateUrl, output]);
+
   return (
     <div className="grid gap-8">
       <TemplateSelect
@@ -182,24 +192,29 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
           onEmpty={() => setOutput('')}
         />
       )}
-      {selectedTemplate && (
+      {selectedTemplate && (validURL || templateDefaultUrl) && (
         <>
-          <div className="grid gap-1.5">
-            <Label>Path Parameters</Label>
-            <ParameterEditor
-              fields={templatePathParams}
-              defaultValues={pathParams}
-              onChange={handlePathParamChange}
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label>Query Parameters</Label>
-            <ParameterEditor
-              fields={templateQueryParams}
-              defaultValues={queryParams}
-              onChange={handleQueryParamChange}
-            />
-          </div>
+          {templatePathParams.length > 0 && (
+            <div className="grid gap-1.5">
+              <Label>Path Parameters</Label>
+              <ParameterEditor
+                fields={templatePathParams}
+                defaultValues={pathParams}
+                onChange={setPathParams}
+              />
+            </div>
+          )}
+          {templateQueryParams.length > 0 && (
+            <div className="grid gap-1.5">
+              <Label>Query Parameters</Label>
+              <ParameterEditor
+                fields={templateQueryParams}
+                defaultValues={queryParams}
+                onChange={setQueryParams}
+              />
+            </div>
+          )}
+
           <OutputBox output={output} />
           <Actions output={output} />
         </>
