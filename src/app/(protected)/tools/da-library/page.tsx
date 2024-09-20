@@ -1,10 +1,10 @@
 import { PageContent, PageDescription, PageHeader, PageTitle } from '~/components/page-details';
 import { db } from '~/lib/db';
-import { DALibraryItem, DALibraryTag } from '@prisma/client';
+import { DALibraryItem } from '@prisma/client';
 import { validateRequest } from '~/lib/auth';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
-import { DEFAULT_PAGE_SIZE, DEFAULT_ROW_SIZE } from '~/components/tools/da-library/constants';
+import { DEFAULT_PAGE_SIZE } from '~/components/tools/da-library/constants';
 import { DALibraryTool } from '~/components/tools/da-library';
 
 export default async function DALibraryPage({
@@ -47,97 +47,37 @@ export default async function DALibraryPage({
           : searchParams.pageSize
         : DEFAULT_PAGE_SIZE,
     ) || DEFAULT_PAGE_SIZE;
-  const urlRowSize =
-    Number(
-      searchParams.rowSize
-        ? Array.isArray(searchParams.rowSize)
-          ? searchParams.rowSize[0]
-          : searchParams.rowSize
-        : DEFAULT_ROW_SIZE,
-    ) || DEFAULT_ROW_SIZE;
 
   var filteredItems: (DALibraryItem & { tags: string[] })[] = [];
   var maxPage = 0;
-  const multipleTags = validTags.length > 1;
-  const singleTag = validTags.length === 1;
-  const lookupType = multipleTags ? 'multiple' : singleTag ? 'single' : 'none';
-  switch (lookupType) {
-    case 'multiple':
-      await Promise.all([
-        db.dALibraryItem
-          .findMany({
-            where: { tags: { some: { name: { in: validTags } } } },
-            orderBy: [{ id: 'asc' }],
-            skip: (urlPage - 1) * urlPageSize,
-            take: urlPageSize,
-            select: {
-              id: true,
-              description: true,
-              imageUrls: true,
-              tags: {
-                select: { name: true },
-              },
-            },
-          })
-          .then((items) => {
-            filteredItems = items.map((item) => ({ ...item, tags: item.tags.map((tag) => tag.name) }));
-          }),
-      ]);
-      break;
-    case 'single':
-      await Promise.all([
-        db.dALibraryItem
-          .findMany({
-            where: { tags: { some: { name: validTags[0] } } },
-            orderBy: [{ id: 'asc' }],
-            skip: (urlPage - 1) * urlPageSize,
-            take: urlPageSize,
-            select: {
-              id: true,
-              description: true,
-              imageUrls: true,
-              tags: {
-                select: { name: true },
-              },
-            },
-          })
-          .then((items) => {
-            filteredItems = items.map((item) => ({ ...item, tags: item.tags.map((tag) => tag.name) }));
-          }),
-        db.dALibraryItem
-          .count({
-            where: { tags: { some: { name: validTags[0] } } },
-          })
-          .then((count) => {
-            maxPage = Math.ceil(count / urlPageSize);
-          }),
-      ]);
-      break;
-    case 'none':
-      await Promise.all([
-        db.dALibraryItem
-          .findMany({
-            orderBy: [{ id: 'asc' }],
-            skip: (urlPage - 1) * urlPageSize,
-            take: urlPageSize,
-            select: {
-              id: true,
-              description: true,
-              imageUrls: true,
-              tags: {
-                select: { name: true },
-              },
-            },
-          })
-          .then((items) => {
-            filteredItems = items.map((item) => ({ ...item, tags: item.tags.map((tag) => tag.name) }));
-          }),
-        db.dALibraryItem.count().then((count) => {
-          maxPage = Math.ceil(count / urlPageSize);
-        }),
-      ]);
-      break;
-  }
+
+  await Promise.all([
+    db.dALibraryItem
+      .findMany({
+        where: urlTags.length > 0 ? { AND: urlTags.map((tag) => ({ tags: { some: { name: tag } } })) } : undefined,
+        orderBy: [{ id: 'asc' }],
+        skip: (urlPage - 1) * urlPageSize,
+        take: urlPageSize,
+        select: {
+          id: true,
+          description: true,
+          imageUrls: true,
+          tags: {
+            select: { name: true },
+          },
+        },
+      })
+      .then((items) => {
+        filteredItems = items.map((item) => ({ ...item, tags: item.tags.map((tag) => tag.name) }));
+      }),
+    db.dALibraryItem
+      .count({
+        where: urlTags.length > 0 ? { AND: urlTags.map((tag) => ({ tags: { some: { name: tag } } })) } : undefined,
+      })
+      .then((count) => {
+        maxPage = Math.ceil(count / urlPageSize);
+      }),
+  ]);
 
   return (
     <>

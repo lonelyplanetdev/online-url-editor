@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useTransition } from 'react';
+import { Pen } from 'lucide-react';
+import { useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '~/components/ui/button';
@@ -13,15 +14,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '~/components/ui/dialog';
+import { DynamicInputList } from '~/components/ui/dynamic-input-list';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
-import { updateTemplate } from './actions';
-import { createTemplateSchema } from './schema'; // Use the appropriate schema
-import { Textarea } from '~/components/ui/textarea';
 import { MultiSelect } from '~/components/ui/multi-select';
-import DynamicInputList from '~/components/ui/dynamic-input-list';
-import { Pen } from 'lucide-react';
+import { Textarea } from '~/components/ui/textarea';
+import { updateTemplate } from './actions';
 import DeleteButton from './delete-button';
+import { createTemplateSchema } from './schema'; // Use the appropriate schema
 
 type TemplateType = {
   id: string;
@@ -48,12 +48,21 @@ export default function UpdateTemplate({
     resolver: zodResolver(createTemplateSchema),
     disabled: shouldBeDisabled,
     defaultValues: {
-      id: template.id,
-      description: template.description ?? '',
-      tags: template.tags,
-      imageUrls: template.imageUrls,
+      id: '',
+      description: '',
+      tags: [],
+      imageUrls: [],
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      id: template.id,
+      description: template.description || '',
+      tags: template.tags,
+      imageUrls: template.imageUrls,
+    });
+  }, [form, template]);
 
   function onOpenChange(open: boolean) {
     if (shouldBeDisabled) return;

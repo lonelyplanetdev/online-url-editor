@@ -13,14 +13,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '~/components/ui/dialog';
+import { DynamicInputList } from '~/components/ui/dynamic-input-list';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
+import { MultiSelect } from '~/components/ui/multi-select';
+import { Textarea } from '~/components/ui/textarea';
 import { createTemplate } from './actions';
 import { createTemplateSchema } from './schema';
-import { Textarea } from '~/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
-import { MultiSelect } from '~/components/ui/multi-select';
-import DynamicInputList from '~/components/ui/dynamic-input-list';
 
 export default function CreateTemplate({ tags }: { tags: { all: string[]; selected: string[] } }) {
   const [isOpen, setOpen] = useState(false);

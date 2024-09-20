@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Input } from '~/components/ui/input'; // Custom Input component
-import { Button } from '~/components/ui/button'; // Custom Button component
+import { Button, ButtonProps } from '~/components/ui/button'; // Custom Button component
 import { X } from 'lucide-react';
 
 // Define the shape of each input item
@@ -11,12 +11,13 @@ interface InputItem {
 
 // Define the props for DynamicInputList
 interface DynamicInputListProps {
+  children?: React.ReactNode;
   defaults?: string[];
-  onChange: (values: string[]) => void;
+  onChange?: (values: string[]) => void;
   disabled?: boolean; // New disabled prop
 }
 
-const DynamicInputList: React.FC<DynamicInputListProps> = ({ defaults = [], onChange, disabled = false }) => {
+const DynamicInputList: React.FC<DynamicInputListProps> = ({ children, defaults = [], onChange, disabled = false }) => {
   // Initialize state with defaults if provided, else start with one empty input
   const [inputs, setInputs] = React.useState<InputItem[]>(() => {
     if (defaults.length > 0) {
@@ -77,7 +78,7 @@ const DynamicInputList: React.FC<DynamicInputListProps> = ({ defaults = [], onCh
 
   // Function to trigger the onChange prop with current values
   const triggerOnChange = (currentInputs: InputItem[]) => {
-    onChange(currentInputs.map((input) => input.value.trim()).filter(Boolean));
+    onChange?.(currentInputs.map((input) => input.value.trim()).filter(Boolean));
   };
 
   return (
@@ -109,13 +110,26 @@ const DynamicInputList: React.FC<DynamicInputListProps> = ({ defaults = [], onCh
       ))}
       <Button
         onClick={handleAddInput}
-        disabled={disabled} // Disable add button
         type="button"
+        disabled={disabled} // Disable
+        size="sm"
       >
-        Add
+        Add Input
       </Button>
     </div>
   );
 };
 
-export default DynamicInputList;
+// interface DynamicInputListAddProps extends ButtonProps {}
+
+// function DynamicInputListAdd({ children, ...props }: DynamicInputListAddProps) {
+//   <Button
+//     type="button"
+//     size="sm"
+//     {...props}
+//   >
+//     {children}
+//   </Button>;
+// }
+
+export { DynamicInputList };

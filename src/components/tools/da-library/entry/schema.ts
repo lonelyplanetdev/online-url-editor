@@ -71,14 +71,14 @@ const imageUrlsArray = z
 
 export const createTemplateSchema = z.object({
   id: z.string().min(1),
-  description: z.string().min(1),
+  description: z.string(),
   tags: z.array(z.string().min(1)),
   imageUrls: imageUrlsArray,
 });
 
 export const updateTemplateSchema = z.object({
   id: z.string().min(1),
-  description: z.string().min(1),
+  description: z.string(),
   tags: z.array(z.string().min(1)),
   imageUrls: imageUrlsArray,
 });

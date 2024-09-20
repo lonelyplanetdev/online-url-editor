@@ -54,7 +54,8 @@ export default function ItemEntry({
           <div className="flex flex-row gap-2">
             {item.tags.map((tag) => (
               <Badge
-                variant="secondary"
+                variant="default"
+                className="whitespace-nowrap"
                 key={tag}
               >
                 {tag}
