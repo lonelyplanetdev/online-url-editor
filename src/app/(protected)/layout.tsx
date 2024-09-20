@@ -51,6 +51,11 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
               //   disabled: false,
               // },
               {
+                name: 'DA Library',
+                href: '/tools/da-library',
+                disabled: false,
+              },
+              {
                 name: 'DCS Content Manager',
                 href: 'https://cms.ptlinternaltools.com/',
                 external: true,

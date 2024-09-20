@@ -71,3 +71,17 @@ model URLBuilderTemplateFieldOption {
 
   @@id([templateId, key, value])
 }
+
+model DALibraryTag {
+  name String @id
+
+  items DALibraryItem[]
+}
+
+model DALibraryItem {
+  id          String   @id
+  description String?
+  imageUrls   String[]
+
+  tags DALibraryTag[]
+}
