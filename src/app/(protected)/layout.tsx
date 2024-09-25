@@ -45,11 +45,11 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
                 href: '/tools/dots-analysis',
                 disabled: false,
               },
-              // {
-              //   name: 'NWB DA Analysis',
-              //   href: '/tools/nwb-da-analysis',
-              //   disabled: false,
-              // },
+              {
+                name: 'Deep Analysis',
+                href: '/tools/deep-analysis',
+                disabled: false,
+              },
               {
                 name: 'DA Library',
                 href: '/tools/da-library',

@@ -3,37 +3,47 @@
 import * as React from 'react';
 import { addDays, format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import type { DateRange } from 'react-day-picker';
+import { DateRange } from 'react-day-picker';
 
 import { cn } from '~/lib/utils';
 import { Button } from '~/components/ui/button';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 
-interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
-  onRangeSelect?: (dateRange: DateRange) => void;
+interface DatePickerWithRangeProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** The current date range value */
+  dateRange?: DateRange;
+  today?: Date;
+  /** Callback when the date range changes */
+  onDateRange?: (dateRange: DateRange | undefined) => void;
 }
-export function DateRangePicker({ onRangeSelect, className }: DateRangePickerProps) {
-  const pstDate = new Date(new Date().getTime() - 8 * 60 * 60 * 1000);
-  const hereDate = new Date(pstDate.getUTCFullYear(), pstDate.getUTCMonth(), pstDate.getUTCDate());
 
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: addDays(hereDate, -8),
-    to: addDays(hereDate, -1),
-  });
+export function DatePickerWithRange({ dateRange, onDateRange, className, today, ...props }: DatePickerWithRangeProps) {
+  const [date, setDate] = React.useState<DateRange | undefined>(dateRange);
 
   React.useEffect(() => {
-    onRangeSelect && onRangeSelect(date || { from: hereDate, to: hereDate });
-  }, [date]);
+    setDate(dateRange);
+  }, [dateRange]);
+
+  const handleDateChange = (newDate: DateRange | undefined) => {
+    setDate(newDate);
+    if (onDateRange) {
+      onDateRange(newDate);
+    }
+  };
 
   return (
-    <div className={cn('grid gap-2', className)}>
+    <div
+      className={cn('grid gap-2', className)}
+      {...props}
+    >
       <Popover>
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={'outline'}
-            className={cn('justify-start text-left font-normal', !date && 'text-muted-foreground')}
+            variant="outline"
+            size="sm"
+            className={cn('w-96 justify-start text-left font-normal', !date && 'text-muted-foreground')}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date?.from ? (
@@ -56,10 +66,10 @@ export function DateRangePicker({ onRangeSelect, className }: DateRangePickerPro
           <Calendar
             initialFocus
             mode="range"
+            today={today}
             defaultMonth={date?.from}
             selected={date}
-            today={hereDate}
-            onSelect={setDate}
+            onSelect={handleDateChange}
             numberOfMonths={2}
           />
         </PopoverContent>

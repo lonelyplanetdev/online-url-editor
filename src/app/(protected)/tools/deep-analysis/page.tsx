@@ -1,23 +1,21 @@
-import { NWBDAAnalysisTool } from '~/components/tools/nwb-da-analysis';
+import { DeepAnalysisTool } from '~/components/tools/deep-analysis';
 
 import { PageContent, PageDescription, PageHeader, PageTitle } from '~/components/page-details';
 import { validateRequest } from '~/lib/auth';
 import { redirect } from 'next/navigation';
 
-export default async function NWBDAAnalysisPage() {
+export default async function DeepAnalysisPage() {
   const authed = await validateRequest();
   if (!authed.user || !authed.session) redirect('/auth/signin');
 
   return (
     <>
       <PageHeader>
-        <PageTitle>Newsbreak {'->'} DomainActive Analysis</PageTitle>
-        <PageDescription>
-          Upload your Newsbreak and DomainActive data to analyze the overlap between the two.
-        </PageDescription>
+        <PageTitle>Deep Analysis</PageTitle>
+        <PageDescription>Upload your deep reports to analyze the overlap between the all of them.</PageDescription>
       </PageHeader>
       <PageContent>
-        <NWBDAAnalysisTool />
+        <DeepAnalysisTool />
       </PageContent>
     </>
   );
