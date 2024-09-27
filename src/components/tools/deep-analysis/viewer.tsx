@@ -8,7 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~
 import { ScrollArea } from '~/components/ui/scroll-area';
 import { Checkbox } from '~/components/ui/checkbox';
 import { Badge } from '~/components/ui/badge';
-import { ArrowUpDown, MoveDown, MoveUp, X } from 'lucide-react';
+import { ArrowUpDown, MoveDown, MoveUp, X, Clipboard } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 
 export default function Viewer({
   data,
@@ -22,8 +28,16 @@ export default function Viewer({
   };
   dates: string[];
 }) {
+  const PAGE_SIZE = 50;
   const [level, setLevel] = React.useState<'campaign' | 'adset' | 'ad'>('campaign');
   const levelFilters = React.useMemo(() => filters.filter((f) => f.level === level), [filters, level]);
+
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const deferredCurrentPage = React.useDeferredValue(currentPage);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [level, filters]);
 
   const [selectedCampaignIds, setSelectedCampaignIds] = React.useState<Set<string>>(new Set());
   const [selectedAdsetIds, setSelectedAdsetIds] = React.useState<Set<string>>(new Set());
@@ -34,7 +48,7 @@ export default function Viewer({
 
   const getFormattedValue = (column: string, value: number) => {
     if (currencyColumns.includes(column)) {
-      return value.toFixed(2);
+      return `$${value.toFixed(2)}`.replace('$-', '-$');
     } else if (percentageColumns.includes(column)) {
       return (value * 100).toFixed(2) + '%';
     } else {
@@ -67,6 +81,8 @@ export default function Viewer({
     }
   };
 
+  const [isPending, startTransition] = React.useTransition();
+
   const campaignsData = React.useMemo(() => {
     const campaigns: Record<
       string,
@@ -77,6 +93,7 @@ export default function Viewer({
         clicks: number;
         impressions: number;
         revenue: number;
+        ad_clicks: number;
         views: number;
         rpac: number;
         cpac: number;
@@ -97,6 +114,7 @@ export default function Viewer({
           clicks: 0,
           impressions: 0,
           revenue: 0,
+          ad_clicks: 0,
           views: 0,
           rpac: 0,
           cpac: 0,
@@ -114,6 +132,7 @@ export default function Viewer({
     });
 
     const revenuePerAdId: Record<string, number> = {};
+    const adClicksPerAdId: Record<string, number> = {};
     const viewsPerAdId: Record<string, number> = {};
 
     filteredSellsideData.forEach((row) => {
@@ -121,30 +140,39 @@ export default function Viewer({
       if (!revenuePerAdId[ad_id]) {
         revenuePerAdId[ad_id] = 0;
       }
+      if (!adClicksPerAdId[ad_id]) {
+        adClicksPerAdId[ad_id] = 0;
+      }
       if (!viewsPerAdId[ad_id]) {
         viewsPerAdId[ad_id] = 0;
       }
       revenuePerAdId[ad_id] += row.revenue;
+      adClicksPerAdId[ad_id] += row.ad_clicks;
       viewsPerAdId[ad_id] += row.views;
     });
 
     Object.values(campaigns).forEach((campaign) => {
       let campaignRevenue = 0;
+      let campaignAdClicks = 0;
       let campaignViews = 0;
       campaign.ad_ids.forEach((ad_id) => {
         if (revenuePerAdId[ad_id]) {
           campaignRevenue += revenuePerAdId[ad_id];
+        }
+        if (adClicksPerAdId[ad_id]) {
+          campaignAdClicks += adClicksPerAdId[ad_id];
         }
         if (viewsPerAdId[ad_id]) {
           campaignViews += viewsPerAdId[ad_id];
         }
       });
       campaign.revenue = campaignRevenue;
+      campaign.ad_clicks = campaignAdClicks;
       campaign.views = campaignViews;
       campaign.margin = campaign.revenue - campaign.spend;
       campaign.roi = campaign.spend !== 0 ? campaign.margin / campaign.spend : 0;
-      campaign.cpac = campaign.clicks !== 0 ? campaign.spend / campaign.clicks : 0;
-      campaign.rpac = campaign.clicks !== 0 ? campaign.revenue / campaign.clicks : 0;
+      campaign.cpac = campaign.ad_clicks !== 0 ? campaign.spend / campaign.ad_clicks : 0;
+      campaign.rpac = campaign.ad_clicks !== 0 ? campaign.revenue / campaign.ad_clicks : 0;
     });
 
     const campaignsArray = Object.values(campaigns);
@@ -163,13 +191,13 @@ export default function Viewer({
             case 'contains':
               return campaignValue.includes(value);
             case 'in_list':
-              return value.split(',').includes(campaignValue);
+              return value.split('\n').includes(campaignValue);
             case 'not_equals':
               return campaignValue !== value;
             case 'not_contains':
               return !campaignValue.includes(value);
             case 'not_in_list':
-              return !value.split(',').includes(campaignValue);
+              return !value.split('\n').includes(campaignValue);
             default:
               return true;
           }
@@ -202,7 +230,7 @@ export default function Viewer({
         const valueB = b[sortColumn as keyof typeof b];
 
         if (typeof valueA === 'number' && typeof valueB === 'number') {
-          return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+          return sortDirection === 'desc' ? valueA - valueB : valueB - valueA;
         } else if (typeof valueA === 'string' && typeof valueB === 'string') {
           return sortDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
         } else {
@@ -215,7 +243,6 @@ export default function Viewer({
   }, [filteredBuysideData, filteredSellsideData, levelFilters, sortColumn, sortDirection]);
 
   const adsetData = React.useMemo(() => {
-    // Create campaignIdToName mapping
     const campaignIdToName: Record<string, string> = {};
     filteredBuysideData.forEach((row) => {
       const campaign_id = row.campaign_id;
@@ -224,12 +251,10 @@ export default function Viewer({
       }
     });
 
-    // Get campaign name filters
     const campaignNameFilters = filters.filter(
       (f) => f.level === 'campaign' && f.column === 'name' && typeof f.value === 'string',
     ) as StringFilter[];
 
-    // Get matchingCampaignIds based on campaign name filters
     const matchingCampaignIds = Object.entries(campaignIdToName)
       .filter(([campaign_id, campaign_name]) => {
         return campaignNameFilters.every((filter) => {
@@ -239,15 +264,15 @@ export default function Viewer({
             case 'equals':
               return campaign_name === value;
             case 'contains':
-              return campaign_name.includes(value);
+              return campaign_name.toLowerCase().includes(value.toLowerCase());
             case 'in_list':
-              return value.split(',').includes(campaign_name);
+              return value.split('\n').includes(campaign_name);
             case 'not_equals':
               return campaign_name !== value;
             case 'not_contains':
-              return !campaign_name.includes(value);
+              return !campaign_name.toLowerCase().includes(value.toLowerCase());
             case 'not_in_list':
-              return !value.split(',').includes(campaign_name);
+              return !value.split('\n').includes(campaign_name);
             default:
               return true;
           }
@@ -265,6 +290,7 @@ export default function Viewer({
         clicks: number;
         impressions: number;
         revenue: number;
+        ad_clicks: number;
         views: number;
         rpac: number;
         cpac: number;
@@ -275,7 +301,6 @@ export default function Viewer({
     > = {};
 
     filteredBuysideData.forEach((row) => {
-      // Check if row should be included based on matchingCampaignIds and selectedCampaignIds
       if (
         (matchingCampaignIds.length > 0 && !matchingCampaignIds.includes(row.campaign_id)) ||
         (selectedCampaignIds.size > 0 && !selectedCampaignIds.has(row.campaign_id))
@@ -293,6 +318,7 @@ export default function Viewer({
           clicks: 0,
           impressions: 0,
           revenue: 0,
+          ad_clicks: 0,
           views: 0,
           rpac: 0,
           cpac: 0,
@@ -309,6 +335,7 @@ export default function Viewer({
 
     const revenuePerAdId: Record<string, number> = {};
     const viewsPerAdId: Record<string, number> = {};
+    const adClicksPerAdId: Record<string, number> = {};
 
     filteredSellsideData.forEach((row) => {
       const ad_id = row.ad_id;
@@ -318,13 +345,18 @@ export default function Viewer({
       if (!viewsPerAdId[ad_id]) {
         viewsPerAdId[ad_id] = 0;
       }
+      if (!adClicksPerAdId[ad_id]) {
+        adClicksPerAdId[ad_id] = 0;
+      }
       revenuePerAdId[ad_id] += row.revenue;
       viewsPerAdId[ad_id] += row.views;
+      adClicksPerAdId[ad_id] += row.ad_clicks;
     });
 
     Object.values(adsets).forEach((adset) => {
       let adsetRevenue = 0;
       let adsetViews = 0;
+      let adsetAdClicks = 0;
       adset.ad_ids.forEach((ad_id) => {
         if (revenuePerAdId[ad_id]) {
           adsetRevenue += revenuePerAdId[ad_id];
@@ -332,13 +364,17 @@ export default function Viewer({
         if (viewsPerAdId[ad_id]) {
           adsetViews += viewsPerAdId[ad_id];
         }
+        if (adClicksPerAdId[ad_id]) {
+          adsetAdClicks += adClicksPerAdId[ad_id];
+        }
       });
       adset.revenue = adsetRevenue;
       adset.views = adsetViews;
+      adset.ad_clicks = adsetAdClicks;
       adset.margin = adset.revenue - adset.spend;
       adset.roi = adset.spend !== 0 ? adset.margin / adset.spend : 0;
-      adset.cpac = adset.clicks !== 0 ? adset.spend / adset.clicks : 0;
-      adset.rpac = adset.clicks !== 0 ? adset.revenue / adset.clicks : 0;
+      adset.cpac = adset.ad_clicks !== 0 ? adset.spend / adset.ad_clicks : 0;
+      adset.rpac = adset.ad_clicks !== 0 ? adset.revenue / adset.ad_clicks : 0;
     });
 
     const adsetsArray = Object.values(adsets);
@@ -357,13 +393,13 @@ export default function Viewer({
             case 'contains':
               return adsetValue.includes(value);
             case 'in_list':
-              return value.split(',').includes(adsetValue);
+              return value.split('\n').includes(adsetValue);
             case 'not_equals':
               return adsetValue !== value;
             case 'not_contains':
               return !adsetValue.includes(value);
             case 'not_in_list':
-              return !value.split(',').includes(adsetValue);
+              return !value.split('\n').includes(adsetValue);
             default:
               return true;
           }
@@ -417,7 +453,6 @@ export default function Viewer({
   ]);
 
   const adData = React.useMemo(() => {
-    // Create adsetIdToName mapping
     const adsetIdToName: Record<string, string> = {};
     const adsetIdToCampaignId: Record<string, string> = {};
     filteredBuysideData.forEach((row) => {
@@ -428,12 +463,10 @@ export default function Viewer({
       }
     });
 
-    // Get adset name filters
     const adsetNameFilters = filters.filter(
       (f) => f.level === 'adset' && f.column === 'name' && typeof f.value === 'string',
     ) as StringFilter[];
 
-    // Get matchingAdsetIds based on adset name filters
     const matchingAdsetIds = Object.entries(adsetIdToName)
       .filter(([adset_id, adset_name]) => {
         return adsetNameFilters.every((filter) => {
@@ -445,13 +478,13 @@ export default function Viewer({
             case 'contains':
               return adset_name.includes(value);
             case 'in_list':
-              return value.split(',').includes(adset_name);
+              return value.split('\n').includes(adset_name);
             case 'not_equals':
               return adset_name !== value;
             case 'not_contains':
               return !adset_name.includes(value);
             case 'not_in_list':
-              return !value.split(',').includes(adset_name);
+              return !value.split('\n').includes(adset_name);
             default:
               return true;
           }
@@ -459,12 +492,10 @@ export default function Viewer({
       })
       .map(([adset_id]) => adset_id);
 
-    // Get campaign name filters
     const campaignNameFilters = filters.filter(
       (f) => f.level === 'campaign' && f.column === 'name' && typeof f.value === 'string',
     ) as StringFilter[];
 
-    // Create campaignIdToName mapping
     const campaignIdToName: Record<string, string> = {};
     filteredBuysideData.forEach((row) => {
       const campaign_id = row.campaign_id;
@@ -473,7 +504,6 @@ export default function Viewer({
       }
     });
 
-    // Get matchingCampaignIds based on campaign name filters
     const matchingCampaignIds = Object.entries(campaignIdToName)
       .filter(([campaign_id, campaign_name]) => {
         return campaignNameFilters.every((filter) => {
@@ -485,13 +515,13 @@ export default function Viewer({
             case 'contains':
               return campaign_name.includes(value);
             case 'in_list':
-              return value.split(',').includes(campaign_name);
+              return value.split('\n').includes(campaign_name);
             case 'not_equals':
               return campaign_name !== value;
             case 'not_contains':
               return !campaign_name.includes(value);
             case 'not_in_list':
-              return !value.split(',').includes(campaign_name);
+              return !value.split('\n').includes(campaign_name);
             default:
               return true;
           }
@@ -510,6 +540,7 @@ export default function Viewer({
         clicks: number;
         impressions: number;
         revenue: number;
+        ad_clicks: number;
         views: number;
         rpac: number;
         cpac: number;
@@ -522,7 +553,6 @@ export default function Viewer({
       const campaign_id = row.campaign_id;
       const adset_id = row.adset_id;
 
-      // Check if row should be included based on matchingAdsetIds, selectedAdsetIds, matchingCampaignIds, and selectedCampaignIds
       if (
         (matchingCampaignIds.length > 0 && !matchingCampaignIds.includes(campaign_id)) ||
         (selectedCampaignIds.size > 0 && !selectedCampaignIds.has(campaign_id)) ||
@@ -543,6 +573,7 @@ export default function Viewer({
           clicks: 0,
           impressions: 0,
           revenue: 0,
+          ad_clicks: 0,
           views: 0,
           rpac: 0,
           cpac: 0,
@@ -557,6 +588,7 @@ export default function Viewer({
 
     const revenuePerAdId: Record<string, number> = {};
     const viewsPerAdId: Record<string, number> = {};
+    const adClicksPerAdId: Record<string, number> = {};
 
     filteredSellsideData.forEach((row) => {
       const ad_id = row.ad_id;
@@ -566,20 +598,26 @@ export default function Viewer({
       if (!viewsPerAdId[ad_id]) {
         viewsPerAdId[ad_id] = 0;
       }
+      if (!adClicksPerAdId[ad_id]) {
+        adClicksPerAdId[ad_id] = 0;
+      }
       revenuePerAdId[ad_id] += row.revenue;
       viewsPerAdId[ad_id] += row.views;
+      adClicksPerAdId[ad_id] += row.ad_clicks;
     });
 
     Object.values(ads).forEach((ad) => {
       const ad_id = ad.id;
       const adRevenue = revenuePerAdId[ad_id] || 0;
       const adViews = viewsPerAdId[ad_id] || 0;
+      const adAdClicks = adClicksPerAdId[ad_id] || 0;
       ad.revenue = adRevenue;
       ad.views = adViews;
+      ad.ad_clicks = adAdClicks;
       ad.margin = ad.revenue - ad.spend;
       ad.roi = ad.spend !== 0 ? ad.margin / ad.spend : 0;
-      ad.cpac = ad.clicks !== 0 ? ad.spend / ad.clicks : 0;
-      ad.rpac = ad.clicks !== 0 ? ad.revenue / ad.clicks : 0;
+      ad.cpac = ad.ad_clicks !== 0 ? ad.spend / ad.ad_clicks : 0;
+      ad.rpac = ad.ad_clicks !== 0 ? ad.revenue / ad.ad_clicks : 0;
     });
 
     const adsArray = Object.values(ads);
@@ -598,13 +636,13 @@ export default function Viewer({
             case 'contains':
               return adValue.includes(value);
             case 'in_list':
-              return value.split(',').includes(adValue);
+              return value.split('\n').includes(adValue);
             case 'not_equals':
               return adValue !== value;
             case 'not_contains':
               return !adValue.includes(value);
             case 'not_in_list':
-              return !value.split(',').includes(adValue);
+              return !value.split('\n').includes(adValue);
             default:
               return true;
           }
@@ -671,34 +709,89 @@ export default function Viewer({
   };
 
   const handleNameClick = (id: string, levelType: 'campaign' | 'adset') => {
-    if (levelType === 'campaign') {
-      setSelectedCampaignIds(new Set([id]));
-      setLevel('adset');
-    } else if (levelType === 'adset') {
-      setSelectedAdsetIds(new Set([id]));
-      setLevel('ad');
-    }
+    startTransition(() => {
+      if (levelType === 'campaign') {
+        setSelectedCampaignIds(new Set([id]));
+        setLevel('adset');
+      } else if (levelType === 'adset') {
+        setSelectedAdsetIds(new Set([id]));
+        setLevel('ad');
+      }
+    });
   };
 
   const columns = [
     { key: 'name', label: 'Name' },
     { key: 'spend', label: 'Spend' },
-    { key: 'clicks', label: 'Clicks' },
+    { key: 'clicks', label: 'Link Clicks' },
     { key: 'impressions', label: 'Impressions' },
     { key: 'revenue', label: 'Revenue' },
     { key: 'views', label: 'Views' },
+    { key: 'ad_clicks', label: 'Ad Clicks' },
     { key: 'rpac', label: 'RPAC' },
     { key: 'cpac', label: 'CPAC' },
     { key: 'margin', label: 'Margin' },
     { key: 'roi', label: 'ROI' },
   ];
 
+  const dataToDisplay = React.useMemo(() => {
+    if (level === 'campaign') {
+      return campaignsData;
+    } else if (level === 'adset') {
+      return adsetData;
+    } else if (level === 'ad') {
+      return adData;
+    } else {
+      return [];
+    }
+  }, [level, campaignsData, adsetData, adData]);
+
+  const totalRow = React.useMemo(() => {
+    const totals: { [key: string]: number } = {
+      spend: 0,
+      clicks: 0,
+      impressions: 0,
+      revenue: 0,
+      views: 0,
+      ad_clicks: 0,
+      margin: 0,
+    };
+
+    dataToDisplay.forEach((item) => {
+      totals.spend += item.spend || 0;
+      totals.clicks += item.clicks || 0;
+      totals.impressions += item.impressions || 0;
+      totals.revenue += item.revenue || 0;
+      totals.views += item.views || 0;
+      totals.ad_clicks += item.ad_clicks || 0;
+      totals.margin += item.margin || 0;
+    });
+
+    totals.cpac = totals.ad_clicks !== 0 ? totals.spend / totals.ad_clicks : 0;
+    totals.rpac = totals.ad_clicks !== 0 ? totals.revenue / totals.ad_clicks : 0;
+    totals.roi = totals.spend !== 0 ? totals.margin / totals.spend : 0;
+
+    return totals;
+  }, [dataToDisplay]);
+
+  const totalRows = dataToDisplay.length;
+  const totalPages = Math.ceil(totalRows / PAGE_SIZE);
+
+  const paginatedData = React.useMemo(() => {
+    return dataToDisplay.slice((deferredCurrentPage - 1) * PAGE_SIZE, deferredCurrentPage * PAGE_SIZE);
+  }, [dataToDisplay, deferredCurrentPage]);
+
   return (
     <div className="h-full space-y-4">
       <div className="flex flex-row items-center gap-2">
         <Button
           onClick={() => {
-            setLevel('campaign');
+            startTransition(() => {
+              setLevel('campaign');
+              setSelectedCampaignIds(new Set());
+              setSelectedAdsetIds(new Set());
+              setSelectedAdIds(new Set());
+            });
           }}
           className="relative flex-1"
           variant={level === 'campaign' ? 'destructive' : 'secondary'}
@@ -720,7 +813,11 @@ export default function Viewer({
         </Button>
         <Button
           onClick={() => {
-            setLevel('adset');
+            startTransition(() => {
+              setLevel('adset');
+              setSelectedAdsetIds(new Set());
+              setSelectedAdIds(new Set());
+            });
           }}
           className="relative flex-1"
           variant={level === 'adset' ? 'destructive' : 'secondary'}
@@ -742,7 +839,10 @@ export default function Viewer({
         </Button>
         <Button
           onClick={() => {
-            setLevel('ad');
+            startTransition(() => {
+              setLevel('ad');
+              setSelectedAdIds(new Set());
+            });
           }}
           className="relative flex-1"
           variant={level === 'ad' ? 'destructive' : 'secondary'}
@@ -765,8 +865,21 @@ export default function Viewer({
       </div>
       <ScrollArea className="h-full rounded-md border">
         <Table>
-          <TableHeader className="sticky top-0 bg-primary-foreground">
-            <TableRow>
+          <thead className="sticky top-0">
+            {/* Total Row */}
+            <tr className="bg-background">
+              <TableHead className="h-8 w-12 p-0">{/* Empty cell for the checkbox column */}</TableHead>
+              {columns.map((column) => (
+                <TableHead
+                  key={column.key}
+                  className="h-8 py-0 text-xs text-primary"
+                >
+                  {column.key === 'name' ? '' : getFormattedValue(column.key, totalRow[column.key] || 0)}
+                </TableHead>
+              ))}
+            </tr>
+            {/* Column Headers Row */}
+            <tr className="bg-primary-foreground">
               <TableHead className="size-12 p-0">
                 <div className="flex size-full items-center justify-center">
                   <Checkbox
@@ -828,11 +941,11 @@ export default function Viewer({
                   </div>
                 </TableHead>
               ))}
-            </TableRow>
-          </TableHeader>
+            </tr>
+          </thead>
           <TableBody>
             {level === 'campaign' &&
-              campaignsData.map((campaign) => (
+              paginatedData.map((campaign) => (
                 <TableRow key={campaign.id}>
                   <TableCell className="size-12 p-0">
                     <div className="flex size-full items-center justify-center">
@@ -852,34 +965,59 @@ export default function Viewer({
                       />
                     </div>
                   </TableCell>
-                  <TableCell
-                    className="cursor-pointer"
-                    onClick={() => handleNameClick(campaign.id, 'campaign')}
-                  >
-                    <span className="line-clamp-1">{campaign.name}</span>
-                    <span className="text-muted-foreground">{campaign.id}</span>
-                  </TableCell>{' '}
+                  <TableCell>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span
+                          onClick={() => handleNameClick(campaign.id, 'campaign')}
+                          className="line-clamp-1 cursor-pointer underline-offset-4 hover:underline"
+                        >
+                          {campaign.name}
+                        </span>
+                        <span className="text-muted-foreground">{campaign.id}</span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 p-0"
+                          >
+                            <Clipboard size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={(e) => navigator.clipboard.writeText(campaign.name)}>
+                            Copy Name
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => navigator.clipboard.writeText(campaign.id)}>
+                            Copy ID
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
                   <TableCell>{getFormattedValue('spend', campaign.spend)}</TableCell>
                   <TableCell>{campaign.clicks}</TableCell>
                   <TableCell>{campaign.impressions}</TableCell>
                   <TableCell>{getFormattedValue('revenue', campaign.revenue)}</TableCell>
                   <TableCell>{campaign.views}</TableCell>
+                  <TableCell>{campaign.ad_clicks}</TableCell>
                   <TableCell>{getFormattedValue('rpac', campaign.rpac)}</TableCell>
                   <TableCell>{getFormattedValue('cpac', campaign.cpac)}</TableCell>
-                  <TableCell>
-                    <span className={campaign.margin >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {getFormattedValue('margin', campaign.margin)}
-                    </span>
+                  <TableCell className={campaign.margin > 0 ? 'text-green-500' : 'text-red-500'}>
+                    {getFormattedValue('margin', campaign.margin)}
                   </TableCell>
-                  <TableCell>
-                    <span className={campaign.roi >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {getFormattedValue('roi', campaign.roi)}
-                    </span>
+                  <TableCell
+                    className={campaign.roi > 0 ? 'bg-green-500/25 text-green-500' : 'bg-red-500/25 text-red-500'}
+                  >
+                    {getFormattedValue('roi', campaign.roi)}
                   </TableCell>
                 </TableRow>
               ))}
             {level === 'adset' &&
-              adsetData.map((adset) => (
+              paginatedData.map((adset) => (
                 <TableRow key={adset.id}>
                   <TableCell className="size-12 p-0">
                     <div className="flex size-full items-center justify-center">
@@ -899,34 +1037,59 @@ export default function Viewer({
                       />
                     </div>
                   </TableCell>
-                  <TableCell
-                    className="cursor-pointer"
-                    onClick={() => handleNameClick(adset.id, 'adset')}
-                  >
-                    <span className="line-clamp-1">{adset.name}</span>
-                    <span className="text-muted-foreground">{adset.id}</span>
+                  <TableCell>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span
+                          onClick={() => handleNameClick(adset.id, 'adset')}
+                          className="line-clamp-1 cursor-pointer underline-offset-4 hover:underline"
+                        >
+                          {adset.name}
+                        </span>
+                        <span className="text-muted-foreground">{adset.id}</span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 p-0"
+                          >
+                            <Clipboard size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={(e) => navigator.clipboard.writeText(adset.name)}>
+                            Copy Name
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => navigator.clipboard.writeText(adset.id)}>
+                            Copy ID
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                   <TableCell>{getFormattedValue('spend', adset.spend)}</TableCell>
                   <TableCell>{adset.clicks}</TableCell>
                   <TableCell>{adset.impressions}</TableCell>
                   <TableCell>{getFormattedValue('revenue', adset.revenue)}</TableCell>
                   <TableCell>{adset.views}</TableCell>
+                  <TableCell>{adset.ad_clicks}</TableCell>
                   <TableCell>{getFormattedValue('rpac', adset.rpac)}</TableCell>
                   <TableCell>{getFormattedValue('cpac', adset.cpac)}</TableCell>
-                  <TableCell>
-                    <span className={adset.margin >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {getFormattedValue('margin', adset.margin)}
-                    </span>
+                  <TableCell className={adset.margin > 0 ? 'text-green-500' : 'text-red-500'}>
+                    {getFormattedValue('margin', adset.margin)}
                   </TableCell>
-                  <TableCell>
-                    <span className={adset.roi >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {getFormattedValue('roi', adset.roi)}
-                    </span>
+                  <TableCell
+                    className={adset.roi > 0 ? 'bg-green-500/25 text-green-500' : 'bg-red-500/25 text-red-500'}
+                  >
+                    {getFormattedValue('roi', adset.roi)}
                   </TableCell>
                 </TableRow>
               ))}
             {level === 'ad' &&
-              adData.map((ad) => (
+              paginatedData.map((ad) => (
                 <TableRow key={ad.id}>
                   <TableCell className="size-12 p-0">
                     <div className="flex size-full items-center justify-center">
@@ -946,32 +1109,100 @@ export default function Viewer({
                       />
                     </div>
                   </TableCell>
-                  <TableCell className="cursor-pointer">
-                    <span className="line-clamp-1">{ad.name}</span>
-                    <span className="text-muted-foreground">{ad.id}</span>
-                  </TableCell>{' '}
+                  <TableCell>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="line-clamp-1 cursor-pointer underline-offset-4 hover:underline">
+                          {ad.name}
+                        </span>
+                        <span className="text-muted-foreground">{ad.id}</span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 p-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Clipboard size={16} />
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(ad.name);
+                            }}
+                          >
+                            Copy Name
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(ad.id);
+                            }}
+                          >
+                            Copy ID
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
                   <TableCell>{getFormattedValue('spend', ad.spend)}</TableCell>
                   <TableCell>{ad.clicks}</TableCell>
                   <TableCell>{ad.impressions}</TableCell>
                   <TableCell>{getFormattedValue('revenue', ad.revenue)}</TableCell>
                   <TableCell>{ad.views}</TableCell>
+                  <TableCell>{ad.ad_clicks}</TableCell>
                   <TableCell>{getFormattedValue('rpac', ad.rpac)}</TableCell>
                   <TableCell>{getFormattedValue('cpac', ad.cpac)}</TableCell>
-                  <TableCell>
-                    <span className={ad.margin >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {getFormattedValue('margin', ad.margin)}
-                    </span>
+                  <TableCell className={ad.margin > 0 ? 'text-green-500' : 'text-red-500'}>
+                    {getFormattedValue('margin', ad.margin)}
                   </TableCell>
-                  <TableCell>
-                    <span className={ad.roi >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {getFormattedValue('roi', ad.roi)}
-                    </span>
+                  <TableCell className={ad.roi > 0 ? 'bg-green-500/25 text-green-500' : 'bg-red-500/25 text-red-500'}>
+                    {getFormattedValue('roi', ad.roi)}
                   </TableCell>
                 </TableRow>
               ))}
           </TableBody>
         </Table>
       </ScrollArea>
+      <div className="flex items-center justify-between p-2">
+        <span className="text-sm">
+          Rows per page: {PAGE_SIZE} | Total rows: {totalRows}
+        </span>
+        <div className="flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1 || isPending}
+            onClick={() => {
+              startTransition(() => {
+                setCurrentPage((prev) => prev - 1);
+              });
+            }}
+          >
+            Previous
+          </Button>
+          <span className="mx-2 text-sm">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages || isPending}
+            onClick={() => {
+              startTransition(() => {
+                setCurrentPage((prev) => prev + 1);
+              });
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

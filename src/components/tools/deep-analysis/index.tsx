@@ -79,6 +79,7 @@ export type Report =
 function DeepAnalysisTool() {
   const [error, setError] = React.useState<string | null>(null);
   const [reports, setReports] = React.useState<Report[]>([]);
+  const defferedReports = React.useDeferredValue(reports);
   const [uploading, setUploading] = React.useState<ReportSide>(ReportSide.BUYSIDE);
   const addReport = React.useCallback(
     (side: ReportSide, { source, filename, data }: any) =>
@@ -192,7 +193,7 @@ function DeepAnalysisTool() {
   }, []);
 
   return (
-    <div className="relative flex h-[calc(100vh-18rem)] flex-col gap-4">
+    <div className="relative flex h-[calc(100vh-22rem)] flex-col gap-4">
       <div className="flex justify-between">
         <DatePickerWithRange
           dateRange={dateRange}
@@ -248,7 +249,6 @@ function DeepAnalysisTool() {
                   <>
                     <NewsbreakReport
                       onData={async (filename, data) => {
-                        console.log(JSON.stringify(data));
                         if (await reportExists(data)) return setError('Report already uploaded');
                         addReport(ReportSide.BUYSIDE, { source: BuysideSource.NEWSBREAK, filename, data });
                       }}
@@ -261,7 +261,6 @@ function DeepAnalysisTool() {
                   <>
                     <DomainActiveReport
                       onData={async (filename, data) => {
-                        console.log(JSON.stringify(data));
                         if (await reportExists(data)) return setError('Report already uploaded');
                         addReport(ReportSide.SELLSIDE, { source: SellsideSource.DOMAINACTIVE, filename, data });
                       }}
@@ -318,20 +317,7 @@ function DeepAnalysisTool() {
                               </>
                             )}
                             <TableCell className="flex items-center justify-between p-2">
-                              <span>
-                                {report.filename}{' '}
-                                <span className="text-xs text-muted-foreground">({report.data.length} rows)</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {(() => {
-                                    const setSize = new Set(
-                                      report.data.map((row) => {
-                                        return row.date;
-                                      }),
-                                    ).size;
-                                    return ` (${setSize} day period)`;
-                                  })()}
-                                </span>
-                              </span>
+                              <span>{report.filename}</span>
                               <Button
                                 className="size-8 p-0 hover:bg-red-500/25 hover:text-red-500"
                                 size="icon"
@@ -369,11 +355,11 @@ function DeepAnalysisTool() {
         filters={filters}
         dates={getDates(dateRange)}
         data={{
-          buyside: reports
+          buyside: defferedReports
             .filter((report) => report.side === ReportSide.BUYSIDE)
             .map((report) => report.data)
             .flat(),
-          sellside: reports
+          sellside: defferedReports
             .filter((report) => report.side === ReportSide.SELLSIDE)
             .map((report) => report.data)
             .flat(),

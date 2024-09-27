@@ -10,8 +10,6 @@ import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { Badge } from '~/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
-import { Separator } from '~/components/ui/separator';
 
 const stringColumns = ['name'] as const;
 const numberColumns = [
@@ -23,9 +21,9 @@ const numberColumns = [
   'clicks',
   'views',
   'ad_clicks',
-  'ctr',
-  'cpc',
-  'rpv',
+  // 'ctr',
+  // 'cpc',
+  // 'rpv',
   'cpac',
   'rpac',
 ] as const;
@@ -69,9 +67,9 @@ const columnLabels: Record<StringColumn | NumberColumn, string> = {
   clicks: 'Clicks',
   views: 'Views',
   ad_clicks: 'Ad Clicks',
-  ctr: 'CTR',
-  cpc: 'CPC',
-  rpv: 'RPV',
+  // ctr: 'CTR',
+  // cpc: 'CPC',
+  // rpv: 'RPV',
   cpac: 'CPAC',
   rpac: 'RPAC',
 };
@@ -306,7 +304,7 @@ export default function Filtering({
                 !addFilterOperator ||
                 !addFilterValue ||
                 (textAreaOperators.includes(addFilterOperator as StringOperator) &&
-                  addFilterValue.split('\n').some((v) => !v.trim()))
+                  addFilterValue.split('\n').filter((v) => v.trim() !== '').length === 0)
               }
             >
               Add Filter
