@@ -189,13 +189,13 @@ export default function Viewer({
             case 'equals':
               return campaignValue === value;
             case 'contains':
-              return campaignValue.includes(value);
+              return campaignValue.toLowerCase().includes(value.toLowerCase());
             case 'in_list':
               return value.split('\n').includes(campaignValue);
             case 'not_equals':
               return campaignValue !== value;
             case 'not_contains':
-              return !campaignValue.includes(value);
+              return !campaignValue.toLowerCase().includes(value.toLowerCase());
             case 'not_in_list':
               return !value.split('\n').includes(campaignValue);
             default:
@@ -391,13 +391,13 @@ export default function Viewer({
             case 'equals':
               return adsetValue === value;
             case 'contains':
-              return adsetValue.includes(value);
+              return adsetValue.toLowerCase().includes(value.toLowerCase());
             case 'in_list':
               return value.split('\n').includes(adsetValue);
             case 'not_equals':
               return adsetValue !== value;
             case 'not_contains':
-              return !adsetValue.includes(value);
+              return !adsetValue.toLowerCase().includes(value.toLowerCase());
             case 'not_in_list':
               return !value.split('\n').includes(adsetValue);
             default:
@@ -476,13 +476,13 @@ export default function Viewer({
             case 'equals':
               return adset_name === value;
             case 'contains':
-              return adset_name.includes(value);
+              return adset_name.toLowerCase().includes(value.toLowerCase());
             case 'in_list':
               return value.split('\n').includes(adset_name);
             case 'not_equals':
               return adset_name !== value;
             case 'not_contains':
-              return !adset_name.includes(value);
+              return !adset_name.toLowerCase().includes(value.toLowerCase());
             case 'not_in_list':
               return !value.split('\n').includes(adset_name);
             default:
@@ -513,13 +513,13 @@ export default function Viewer({
             case 'equals':
               return campaign_name === value;
             case 'contains':
-              return campaign_name.includes(value);
+              return campaign_name.toLowerCase().includes(value.toLowerCase());
             case 'in_list':
               return value.split('\n').includes(campaign_name);
             case 'not_equals':
               return campaign_name !== value;
             case 'not_contains':
-              return !campaign_name.includes(value);
+              return !campaign_name.toLowerCase().includes(value.toLowerCase());
             case 'not_in_list':
               return !value.split('\n').includes(campaign_name);
             default:
@@ -634,13 +634,13 @@ export default function Viewer({
             case 'equals':
               return adValue === value;
             case 'contains':
-              return adValue.includes(value);
+              return adValue.toLowerCase().includes(value.toLowerCase());
             case 'in_list':
               return value.split('\n').includes(adValue);
             case 'not_equals':
               return adValue !== value;
             case 'not_contains':
-              return !adValue.includes(value);
+              return !adValue.toLowerCase().includes(value.toLowerCase());
             case 'not_in_list':
               return !value.split('\n').includes(adValue);
             default:
