@@ -42,6 +42,7 @@ enum URLBuilderTemplateFieldType {
   TEXT
   LIST
   SELECT
+  MULTI_SELECT
 }
 
 model URLBuilderTemplateField {
@@ -50,6 +51,7 @@ model URLBuilderTemplateField {
   key          String
   type         URLBuilderTemplateFieldType
   defaultValue String                      @default("")
+  infoLink     String?
   hidden       Boolean                     @default(false)
   optional     Boolean                     @default(false)
   encoded      Boolean                     @default(true)

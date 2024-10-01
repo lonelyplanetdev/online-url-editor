@@ -1,20 +1,23 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 
 import { Input } from '~/components/ui/input';
 import { URLBuilderTemplateField, URLBuilderTemplateFieldOption } from '@prisma/client';
 import { Textarea } from '~/components/ui/textarea';
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { Asterisk, Check, ChevronsUpDown } from 'lucide-react';
+import { ArrowUpRight, Asterisk, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { ScrollArea } from '~/components/ui/scroll-area';
 import { cn } from '~/lib/utils';
+import { Popover, PopoverTrigger } from '~/components/ui/popover';
 
 interface ParametersListProps {
   ignoreEncoding?: boolean;
@@ -69,6 +72,7 @@ export default function ParameterEditor({ ignoreEncoding, fields, defaultValues,
             value={params[field.key]}
             encoded={field.encoded && !ignoreEncoding}
             options={field.selectOptions}
+            infoLink={field.infoLink}
             onChange={(key, value, encoded) => {
               setParams((prev) => {
                 return {
@@ -89,11 +93,21 @@ interface ParameterRowProps {
   optional: boolean;
   value: string;
   encoded: boolean;
+  infoLink: string | null;
   options?: URLBuilderTemplateFieldOption[];
   onChange: (key: string, value: string, encoded: boolean) => void;
 }
-function ParameterRow({ param_key: key, type, optional, value, encoded, options, onChange }: ParameterRowProps) {
-  const [selected, setSelected] = React.useState<string | null>(null);
+function ParameterRow({
+  param_key: key,
+  type,
+  optional,
+  value,
+  encoded,
+  infoLink,
+  options,
+  onChange,
+}: ParameterRowProps) {
+  const [selected, setSelected] = React.useState<string | undefined>(undefined);
 
   return (
     <div className="flex gap-2">
@@ -103,7 +117,21 @@ function ParameterRow({ param_key: key, type, optional, value, encoded, options,
           !optional ? 'bg-destructive/25' : 'bg-primary-foreground',
         )}
       >
-        {key}
+        {infoLink ? (
+          <Link
+            href={infoLink}
+            className="relative pr-3.5 underline-offset-4 hover:underline"
+            target="_blank"
+          >
+            {key}{' '}
+            <ArrowUpRight
+              className="absolute right-0 top-0"
+              size={14}
+            />
+          </Link>
+        ) : (
+          key
+        )}
         {!optional && (
           <div
             className="absolute right-0 ml-1 text-destructive"
@@ -160,6 +188,55 @@ function ParameterRow({ param_key: key, type, optional, value, encoded, options,
                   {value === option.value && <Check className="size-4" />}
                 </DropdownMenuItem>
               ))}
+            </ScrollArea>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : type === 'MULTI_SELECT' ? (
+        <DropdownMenu modal={true}>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-between"
+            >
+              {selected && selected.split(',').length > 0
+                ? `${selected?.split(',').length} options selected`
+                : 'Select an option'}
+              <ChevronsUpDown className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-96"
+            align="start"
+          >
+            <ScrollArea className={cn(options && options.length > 6 && 'h-48')}>
+              {options?.map((option) => {
+                const checked = selected?.split(',').includes(option.value);
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={option.value}
+                    checked={checked}
+                    onCheckedChange={(isChecked) => {
+                      setSelected((prev) => {
+                        const newSelected = isChecked
+                          ? prev
+                            ? `${prev},${option.value}`
+                            : option.value
+                          : prev
+                              ?.split(',')
+                              .filter((v) => v !== option.value)
+                              .join(',');
+
+                        // Call onChange with the updated value
+                        onChange(key, newSelected || '', encoded);
+
+                        return newSelected;
+                      });
+                    }}
+                  >
+                    {option.label || option.value}
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
             </ScrollArea>
           </DropdownMenuContent>
         </DropdownMenu>
