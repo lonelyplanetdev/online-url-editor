@@ -9,7 +9,7 @@ import { Button } from '~/components/ui/button';
 import { ScrollArea } from '~/components/ui/scroll-area';
 import { Badge } from '~/components/ui/badge';
 import { cn } from '~/lib/utils';
-import { DomainActiveReport } from './report-sellside';
+import { AdsComReport, DomainActiveReport } from './report-sellside';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,7 @@ export type BuysideDataRow = {
 
 export enum SellsideSource {
   DOMAINACTIVE,
+  ADSCOM,
 }
 export type SellsideDataRow = {
   date: string;
@@ -268,6 +269,15 @@ function DeepAnalysisTool() {
                         setError(error);
                       }}
                     />
+                    <AdsComReport
+                      onData={async (filename, data) => {
+                        if (await reportExists(data)) return setError('Report already uploaded');
+                        addReport(ReportSide.SELLSIDE, { source: SellsideSource.ADSCOM, filename, data });
+                      }}
+                      onError={(error) => {
+                        setError(error);
+                      }}
+                    />
                   </>
                 )}
               </div>
@@ -308,10 +318,16 @@ function DeepAnalysisTool() {
                                     className={cn(
                                       report.source === SellsideSource.DOMAINACTIVE
                                         ? 'bg-blue-500 text-white hover:bg-blue-600 hover:text-white'
-                                        : 'bg-gray-500 text-white hover:bg-gray-600 hover:text-white',
+                                        : report.source === SellsideSource.ADSCOM
+                                          ? 'bg-pink-500 text-white hover:bg-pink-600 hover:text-white'
+                                          : 'bg-gray-500 text-white hover:bg-gray-600 hover:text-white',
                                     )}
                                   >
-                                    {report.source === SellsideSource.DOMAINACTIVE ? 'DomainActive' : 'Unknown'}
+                                    {report.source === SellsideSource.DOMAINACTIVE
+                                      ? 'DomainActive'
+                                      : report.source === SellsideSource.ADSCOM
+                                        ? 'Ads.com'
+                                        : 'Unknown'}
                                   </Badge>
                                 </TableCell>
                               </>
