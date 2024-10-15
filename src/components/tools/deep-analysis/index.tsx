@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 import { addDays } from 'date-fns';
-import { NewsbreakReport } from './report-buyside';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
 import { Settings, Upload, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { ScrollArea } from '~/components/ui/scroll-area';
 import { Badge } from '~/components/ui/badge';
 import { cn } from '~/lib/utils';
+import { NewsbreakReport, MetaReport } from './report-buyside';
 import { AdsComReport, DomainActiveReport } from './report-sellside';
 import {
   Dialog,
@@ -25,6 +25,7 @@ import type { DateRange as RDPDateRange } from 'react-day-picker';
 
 export enum BuysideSource {
   NEWSBREAK,
+  META,
 }
 export type BuysideDataRow = {
   source: BuysideSource;
@@ -257,6 +258,15 @@ function DeepAnalysisTool() {
                         setError(error);
                       }}
                     />
+                    <MetaReport
+                      onData={async (filename, data) => {
+                        if (await reportExists(data)) return setError('Report already uploaded');
+                        addReport(ReportSide.BUYSIDE, { source: BuysideSource.META, filename, data });
+                      }}
+                      onError={(error) => {
+                        setError(error);
+                      }}
+                    />
                   </>
                 ) : (
                   <>
@@ -303,10 +313,16 @@ function DeepAnalysisTool() {
                                       className={cn(
                                         report.source === BuysideSource.NEWSBREAK
                                           ? 'bg-red-500 text-white hover:bg-red-600 hover:text-white'
-                                          : 'bg-gray-500 text-white hover:bg-gray-600 hover:text-white',
+                                          : report.source === BuysideSource.META
+                                            ? 'bg-blue-500 text-white hover:bg-blue-600 hover:text-white'
+                                            : 'bg-gray-500 text-white hover:bg-gray-600 hover:text-white',
                                       )}
                                     >
-                                      {report.source === BuysideSource.NEWSBREAK ? 'Newsbreak' : 'Unknown'}
+                                      {report.source === BuysideSource.NEWSBREAK
+                                        ? 'Newsbreak'
+                                        : report.source === BuysideSource.META
+                                          ? 'Meta'
+                                          : 'Unknown'}
                                     </Badge>
                                   </div>
                                 </TableCell>
