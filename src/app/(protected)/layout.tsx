@@ -67,6 +67,12 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
                 external: true,
                 disabled: false,
               },
+              {
+                name: 'Dynamic URLs Generator',
+                href: 'https://urls.ptlinternaltools.com/',
+                external: true,
+                disabled: false,
+              },
             ]}
           />
         </div>
