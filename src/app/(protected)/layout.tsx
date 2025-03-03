@@ -68,6 +68,12 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
                 disabled: false,
               },
               {
+                name: 'Campaign Launch',
+                href: 'https://launch.ptlinternaltools.com/',
+                external: true,
+                disabled: false,
+              },
+              {
                 name: 'Dynamic URLs Generator',
                 href: 'https://urls.ptlinternaltools.com/',
                 external: true,
