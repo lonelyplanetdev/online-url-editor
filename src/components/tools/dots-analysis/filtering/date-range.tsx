@@ -12,10 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 
 interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
   onRangeSelect?: (dateRange: DateRange) => void;
+  disabled?: boolean;
 }
-export function DateRangePicker({ onRangeSelect, className }: DateRangePickerProps) {
-  const pstDate = new Date(new Date().getTime() - 8 * 60 * 60 * 1000);
-  const hereDate = new Date(pstDate.getUTCFullYear(), pstDate.getUTCMonth(), pstDate.getUTCDate());
+export function DateRangePicker({ onRangeSelect, className, disabled }: DateRangePickerProps) {
+  const { pstDate, hereDate } = React.useMemo(() => {
+    const pstDate = new Date(new Date().getTime() - 8 * 60 * 60 * 1000);
+    const hereDate = new Date(pstDate.getUTCFullYear(), pstDate.getUTCMonth(), pstDate.getUTCDate());
+    return { pstDate, hereDate };
+  }, []);
 
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: addDays(hereDate, -8),
@@ -24,7 +28,7 @@ export function DateRangePicker({ onRangeSelect, className }: DateRangePickerPro
 
   React.useEffect(() => {
     onRangeSelect && onRangeSelect(date || { from: hereDate, to: hereDate });
-  }, [date]);
+  }, [date, hereDate, onRangeSelect]);
 
   return (
     <div className={cn('grid gap-2', className)}>
@@ -33,7 +37,12 @@ export function DateRangePicker({ onRangeSelect, className }: DateRangePickerPro
           <Button
             id="date"
             variant={'outline'}
-            className={cn('justify-start text-left font-normal', !date && 'text-muted-foreground')}
+            className={cn(
+              'justify-start text-left font-normal',
+              !date && 'text-muted-foreground',
+              disabled && 'cursor-not-allowed',
+            )}
+            disabled={disabled}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date?.from ? (

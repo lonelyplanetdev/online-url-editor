@@ -56,6 +56,11 @@ export default function ToolLayout({ children }: { children: React.ReactNode }) 
                 disabled: false,
               },
               {
+                name: 'Ads.com Report',
+                href: '/tools/ads.com-report',
+                disabled: false,
+              },
+              {
                 name: 'DCS Content Manager',
                 href: 'https://cms.ptlinternaltools.com/',
                 external: true,
