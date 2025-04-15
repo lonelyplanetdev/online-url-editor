@@ -16,6 +16,8 @@ export type AdsAuthResponse = z.infer<typeof AdsAuthResponseSchema>;
 export const AdClickReportItemSchema = z.object({
   server_datetime: z.string(),
   subid_1: z.string().nullable(),
+  subid_2: z.string().nullable(),
+  subid_3: z.string().nullable(),
   visits: z.number(),
   clicks: z.number(),
   estimated_revenue: z.string().transform((val) => parseFloat(val)),
@@ -182,7 +184,7 @@ export class AdsClient {
 
     do {
       const requestBody = {
-        columns: ['server_datetime', 'subid_1', 'visits', 'clicks', 'estimated_revenue'],
+        columns: ['server_datetime', 'subid_1', 'subid_2', 'subid_3', 'visits', 'clicks', 'estimated_revenue'],
         filter_by: [
           {
             column: 'server_datetime',
@@ -190,7 +192,7 @@ export class AdsClient {
             value: [startDate, endDate],
           },
         ],
-        group_by: ['server_datetime', 'subid_1'],
+        group_by: ['server_datetime', 'subid_1', 'subid_2', 'subid_3'],
         order_by: [
           {
             column: 'estimated_revenue',
