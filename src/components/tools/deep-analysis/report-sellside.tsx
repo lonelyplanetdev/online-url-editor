@@ -188,9 +188,11 @@ export function AdsComReport({ onData, onError }: AdsComReportProps) {
               }
 
               const parsedData: SellsideDataRow[] = data
+                .filter((d) => d['subid_1'] !== '' && d['subid_1'].startsWith('ad_id-'))
                 .map((d) => {
                   const adIdRaw = d['subid_1'] || '';
                   const adId = adIdRaw.replace(/^ad_id-/, ''); // Remove "ad_id-" from the start
+                  console.log(adId);
 
                   return {
                     source: SellsideSource.ADSCOM, // Update source
