@@ -138,17 +138,17 @@ export function MetaReport({ onData, onError }: MetaReportProps) {
 
   const requiredColumns = React.useMemo(
     () => [
-      'Day',
-      'Campaign name',
-      'Campaign ID',
-      'Ad set name',
-      'Ad set ID',
-      'Ad name',
-      'Ad ID',
-      'Currency',
-      'Amount spent (USD)',
-      'Link clicks',
-      'Impressions',
+      'day',
+      'campaign name',
+      'campaign id',
+      'ad set name',
+      'ad set id',
+      'ad name',
+      'ad id',
+      'currency',
+      'amount spent (usd)',
+      'link clicks',
+      'impressions',
     ],
     [],
   );
@@ -174,12 +174,24 @@ export function MetaReport({ onData, onError }: MetaReportProps) {
               const { data } = Papa.parse<Record<string, string>>(result, {
                 header: true,
               });
-
               var isBadData: boolean = false;
 
               const allKeys = new Set<string>(data.map((d) => Object.keys(d)).flat());
+              const allKeysLower = new Set<string>(
+                data.map((d) => Object.keys(d).map((key) => key.toLowerCase())).flat(),
+              );
+              const keyMapping: Record<string, string> = Array.from(allKeysLower).reduce(
+                (acc: Record<string, string>, lowerKey) => {
+                  const exactKeyIndex = Array.from(allKeysLower).indexOf(lowerKey);
+                  const exactKey = Array.from(allKeys)[exactKeyIndex];
+                  acc[lowerKey] = exactKey;
+                  return acc;
+                },
+                {},
+              );
+
               for (const key of requiredColumns) {
-                if (!allKeys.has(key)) {
+                if (!allKeysLower.has(key)) {
                   isBadData = true;
                   break;
                 }
@@ -194,16 +206,16 @@ export function MetaReport({ onData, onError }: MetaReportProps) {
                 .map((d) => {
                   return {
                     source: BuysideSource.META,
-                    date: d['Day'],
-                    ad_id: d['Ad ID'],
-                    ad_name: d['Ad name'],
-                    adset_id: d['Ad set ID'],
-                    adset_name: d['Ad set name'],
-                    campaign_id: d['Campaign ID'],
-                    campaign_name: d['Campaign name'],
-                    spend: parseFloat(`${d['Amount spent (USD)']}`.replace(/[^0-9.-]+/g, '')) || 0,
-                    clicks: parseInt(d['Link clicks']) || 0,
-                    impressions: parseInt(d['Impressions']) || 0,
+                    date: d[keyMapping['day']],
+                    ad_id: d[keyMapping['ad id']],
+                    ad_name: d[keyMapping['ad name']],
+                    adset_id: d[keyMapping['ad set id']],
+                    adset_name: d[keyMapping['ad set name']],
+                    campaign_id: d[keyMapping['campaign id']],
+                    campaign_name: d[keyMapping['campaign name']],
+                    spend: parseFloat(`${d[keyMapping['amount spent (usd)']]}`.replace(/[^0-9.-]+/g, '')) || 0,
+                    clicks: parseInt(d[keyMapping['link clicks']]) || 0,
+                    impressions: parseInt(d[keyMapping['impressions']]) || 0,
                   };
                 })
                 .filter((d) => d.date && d.spend !== null && d.clicks !== null && d.impressions !== null)
