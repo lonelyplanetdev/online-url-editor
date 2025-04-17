@@ -17,6 +17,9 @@ interface URLBuilderToolProps {
 }
 export function URLBuilderTool({ templates }: URLBuilderToolProps) {
   const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>();
+  const template = React.useMemo(() => {
+    return templates.find((template) => template.id === selectedTemplate);
+  }, [templates, selectedTemplate]);
   const templateQueryParams = React.useMemo(() => {
     return (
       templates
@@ -158,6 +161,11 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     // remove existing query params
     url.search = '';
 
+    // if pathMustEndInSlash is true, and the path doesn't end in a slash, add one
+    if (template?.pathMustEndInSlash && !url.pathname.endsWith('/')) {
+      url.pathname += '/';
+    }
+
     setOutput(`${url.href}${searchParams ? `?${searchParams}` : ''}`);
   }, [
     generateQueryParamString,
@@ -168,6 +176,7 @@ export function URLBuilderTool({ templates }: URLBuilderToolProps) {
     templatePathParams,
     templateQueryParams,
     templateUrl,
+    template,
   ]);
 
   const validURL = React.useMemo(() => {
